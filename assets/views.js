@@ -1455,37 +1455,12 @@ const Views = {
     const tools = Store.get('aiTools');
     const lastFetch = Store.get('aiLastFetch');
 
-    // ===== 顶部：AI软件工具 & 应用 =====
-    const toolsHeader = document.createElement('div');
-    toolsHeader.className = 'section-title';
-    toolsHeader.style.marginTop = '4px';
-    toolsHeader.textContent = `AI软件工具 & 应用（${tools.length}个）`;
-    container.appendChild(toolsHeader);
-
-    if (tools.length === 0) {
-      // 默认展示工具列表
-      const defaultTools = AIFetcher.getTools();
-      const toolsGrid = document.createElement('div');
-      toolsGrid.className = 'ai-tools-grid';
-      defaultTools.forEach(tool => {
-        toolsGrid.appendChild(this.renderAIToolCard(tool));
-      });
-      container.appendChild(toolsGrid);
-    } else {
-      const toolsGrid = document.createElement('div');
-      toolsGrid.className = 'ai-tools-grid';
-      tools.forEach(tool => {
-        toolsGrid.appendChild(this.renderAIToolCard(tool));
-      });
-      container.appendChild(toolsGrid);
-    }
-
-    // ===== 下半部分：AI行业每日新闻 =====
+    // ===== 顶部：AI行业每日新闻 =====
     const info = document.createElement('div');
     info.className = 'card';
     info.style.background = 'linear-gradient(135deg, #7bc67e, #a8d8a8)';
     info.style.color = '#fff';
-    info.style.marginTop = '16px';
+    info.style.marginTop = '4px';
     info.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <span style="font-size:20px;">🤖</span>
@@ -1529,6 +1504,31 @@ const Views = {
         list.appendChild(el);
       });
       container.appendChild(list);
+    }
+
+    // ===== 下半部分：AI软件工具 & 应用 =====
+    const toolsHeader = document.createElement('div');
+    toolsHeader.className = 'section-title';
+    toolsHeader.style.marginTop = '16px';
+    toolsHeader.textContent = `AI软件工具 & 应用（${tools.length}个）`;
+    container.appendChild(toolsHeader);
+
+    if (tools.length === 0) {
+      // 默认展示工具列表
+      const defaultTools = AIFetcher.getTools();
+      const toolsGrid = document.createElement('div');
+      toolsGrid.className = 'ai-tools-grid';
+      defaultTools.forEach(tool => {
+        toolsGrid.appendChild(this.renderAIToolCard(tool));
+      });
+      container.appendChild(toolsGrid);
+    } else {
+      const toolsGrid = document.createElement('div');
+      toolsGrid.className = 'ai-tools-grid';
+      tools.forEach(tool => {
+        toolsGrid.appendChild(this.renderAIToolCard(tool));
+      });
+      container.appendChild(toolsGrid);
     }
 
     // 绑定采集按钮
