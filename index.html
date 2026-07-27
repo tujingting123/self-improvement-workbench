@@ -11,10 +11,10 @@
   <meta name="apple-mobile-web-app-title" content="提升工作台">
   <meta name="theme-color" content="#ff8fa3">
   <meta name="description" content="身材管理、英语学习、阅读记录、AI学习、财经资讯、穿搭灵感、日记备忘、灵感集、技能提升">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <title>自我提升工作台</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="./assets/style.css">
 </head>
 <body>
   <div id="app">
@@ -75,9 +75,9 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="assets/store.js?v=27"></script>
-  <script src="assets/views.js?v=27"></script>
-  <script src="assets/app.js?v=27"></script>
+  <script src="./assets/store.js?v=28"></script>
+  <script src="./assets/views.js?v=28"></script>
+  <script src="./assets/app.js?v=28"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
@@ -88,8 +88,7 @@
           keys.forEach(key => caches.delete(key));
         });
       }
-      // 注册新的 Service Worker
-      navigator.serviceWorker.register('sw.js?v3').catch(() => {});
+      navigator.serviceWorker.register('./sw.js?v3').catch(() => {});
     }
   </script>
 </body>
