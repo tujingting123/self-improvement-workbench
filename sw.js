@@ -1,21 +1,23 @@
-// Service Worker v2 - 修复 POST 请求
-const CACHE_NAME = 'self-improvement-v2';
+// Service Worker v3 - 修复 GitHub Pages 路径
+const CACHE_NAME = 'self-improvement-v3';
+const BASE_PATH = '/self-improvement-workbench';
 const STATIC_ASSETS = [
-  '/index.html',
-  '/assets/style.css',
-  '/assets/store.js',
-  '/assets/views.js',
-  '/assets/app.js',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/apple-touch-icon.png',
-  '/manifest.json'
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/assets/style.css`,
+  `${BASE_PATH}/assets/store.js`,
+  `${BASE_PATH}/assets/views.js`,
+  `${BASE_PATH}/assets/app.js`,
+  `${BASE_PATH}/icon-192.png`,
+  `${BASE_PATH}/icon-512.png`,
+  `${BASE_PATH}/apple-touch-icon.png`,
+  `${BASE_PATH}/manifest.json`
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
     }).then(() => self.skipWaiting())
   );
 });
@@ -34,30 +36,20 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // POST 请求：直接走网络，不缓存
-  if (request.method === 'POST') {
-    return;
-  }
+  if (request.method !== 'GET') return;
 
-  // 同源 GET 请求：缓存优先
+  // 同源 GET 请求：网络优先，缓存兜底
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) {
-          // 后台更新
-          fetch(request).then((response) => {
-            if (response.ok) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, response));
-            }
-          }).catch(() => {});
-          return cached;
+      fetch(request).then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
+        return response;
+      }).catch(() => {
+        return caches.match(request).then((cached) => {
+          return cached || caches.match(`${BASE_PATH}/index.html`);
         });
       })
     );

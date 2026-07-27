@@ -75,9 +75,9 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="assets/store.js?v=26"></script>
-  <script src="assets/views.js?v=26"></script>
-  <script src="assets/app.js?v=26"></script>
+  <script src="assets/store.js?v=27"></script>
+  <script src="assets/views.js?v=27"></script>
+  <script src="assets/app.js?v=27"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
@@ -88,9 +88,8 @@
           keys.forEach(key => caches.delete(key));
         });
       }
-    }
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+      // 注册新的 Service Worker
+      navigator.serviceWorker.register('sw.js?v3').catch(() => {});
     }
   </script>
 </body>
