@@ -668,6 +668,14 @@ const Views = {
       if (summary.checkedTasks.length > 0) {
         body += `<div style="margin-bottom:10px;"><strong>✅ 已完成任务</strong><br>${summary.checkedTasks.map(t => `· ${Views.escape(t)}`).join('<br>')}</div>`;
       }
+      // 学习内容
+      if (summary.topics.length > 0) {
+        body += `<div style="margin-bottom:10px;"><strong>📝 学习内容</strong>`;
+        summary.topics.forEach(tp => {
+          body += `<div style="margin-top:4px;padding:8px;background:var(--bg-soft);border-radius:8px;font-size:13px;white-space:pre-wrap;">${Views.escape(tp.topic)}</div>`;
+        });
+        body += `</div>`;
+      }
       // 新概念进度
       if (summary.lessonHistory.length > 0) {
         body += `<div style="margin-bottom:10px;"><strong>📖 新概念进度</strong><br>${summary.lessonHistory.map(h => `· 学完第 ${h.lesson} 课`).join('<br>')}</div>`;
@@ -678,7 +686,24 @@ const Views = {
       }
       // 当日生词
       if (summary.newWords.length > 0) {
-        body += `<div style="margin-bottom:10px;"><strong>🔤 新增生词</strong><br>${summary.newWords.map(w => `· ${Views.escape(w.text)} - ${Views.escape(w.meaning || '')}`).join('<br>')}</div>`;
+        body += `<div style="margin-bottom:10px;"><strong>🔤 生词 (${summary.newWords.length})</strong><br>`;
+        summary.newWords.forEach(w => {
+          body += `· <strong>${Views.escape(w.text)}</strong>`;
+          if (w.phonetic) body += ` /${Views.escape(w.phonetic)}/`;
+          if (w.meaning) body += ` — ${Views.escape(w.meaning)}`;
+          body += `<br>`;
+        });
+        body += `</div>`;
+      }
+      // 当日短语
+      if (summary.newPhrases && summary.newPhrases.length > 0) {
+        body += `<div style="margin-bottom:10px;"><strong>💬 短语 (${summary.newPhrases.length})</strong><br>`;
+        summary.newPhrases.forEach(p => {
+          body += `· <strong>${Views.escape(p.en)}</strong> — ${Views.escape(p.cn || '')}`;
+          if (p.example) body += `<br>&nbsp;&nbsp;<em style="color:var(--text-muted);font-size:12px;">${Views.escape(p.example)}</em>`;
+          body += `<br>`;
+        });
+        body += `</div>`;
       }
     }
 
@@ -854,8 +879,16 @@ const Views = {
     let allWords = [];
     let allPhrases = [];
     tasks.forEach(t => {
+      // 当日
       if (t.words) allWords = allWords.concat(t.words.map(w => ({...w, taskName: t.name})));
       if (t.phrases) allPhrases = allPhrases.concat(t.phrases.map(p => ({...p, taskName: t.name})));
+      // 历史
+      if (t.wordHistory) t.wordHistory.forEach(h => {
+        allWords = allWords.concat(h.words.map(w => ({...w, taskName: t.name, addDate: h.date})));
+      });
+      if (t.phraseHistory) t.phraseHistory.forEach(h => {
+        allPhrases = allPhrases.concat(h.phrases.map(p => ({...p, taskName: t.name, addDate: h.date})));
+      });
     });
 
     if (allWords.length === 0 && allPhrases.length === 0) return;

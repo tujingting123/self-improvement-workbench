@@ -22,6 +22,9 @@ const Store = {
           topic: '', 
           words: [],
           phrases: [],
+          topicHistory: [],
+          wordHistory: [],
+          phraseHistory: [],
           custom: false,
           lessonProgress: 31,
           lessonTotal: 144,
@@ -34,6 +37,9 @@ const Store = {
           topic: '', 
           words: [],
           phrases: [],
+          topicHistory: [],
+          wordHistory: [],
+          phraseHistory: [],
           custom: false,
           episodeCount: 0,
           episodes: []
@@ -77,6 +83,7 @@ const Store = {
       settings: {
         theme: 'light',
         lastActiveDate: null,
+        lastEnglishDate: null,
         streak: 0
       }
     };
@@ -96,7 +103,48 @@ const Store = {
     this.updateStreak();
     // 清理已废弃的雅思备考任务
     this.cleanupLegacyData();
+    // 英语每日归档（0点清空，历史保留）
+    this.archiveDailyEnglish();
     return this.data;
+  },
+
+  // 英语每日归档：将前一天的内容归档到历史，清空当日
+  archiveDailyEnglish() {
+    const today = this.todayKey();
+    const lastDate = this.data.settings.lastEnglishDate;
+    
+    // 首次使用或已是今天，不归档
+    if (!lastDate || lastDate === today) {
+      this.data.settings.lastEnglishDate = today;
+      return;
+    }
+
+    // 跨天了，归档前一天的内容
+    const tasks = this.data.englishTasks || [];
+    tasks.forEach(t => {
+      // 归档 topic
+      if (t.topic && t.topic.trim()) {
+        if (!t.topicHistory) t.topicHistory = [];
+        t.topicHistory.push({ date: lastDate, text: t.topic });
+      }
+      // 归档 words
+      if (t.words && t.words.length > 0) {
+        if (!t.wordHistory) t.wordHistory = [];
+        t.wordHistory.push({ date: lastDate, words: t.words });
+      }
+      // 归档 phrases
+      if (t.phrases && t.phrases.length > 0) {
+        if (!t.phraseHistory) t.phraseHistory = [];
+        t.phraseHistory.push({ date: lastDate, phrases: t.phrases });
+      }
+      // 清空当日
+      t.topic = '';
+      t.words = [];
+      t.phrases = [];
+    });
+
+    this.data.settings.lastEnglishDate = today;
+    this.save();
   },
 
   // 清理旧版遗留数据
@@ -224,12 +272,14 @@ const Store = {
     const day = this.data.checkins[dateStr] || {};
     const englishCheckins = day.english || {};
     const checkedTaskIds = Object.entries(englishCheckins).filter(([, v]) => v).map(([k]) => k);
+    const today = this.todayKey();
 
     const result = {
       date: dateStr,
       checkedTasks: [],
       topics: [],
       newWords: [],
+      newPhrases: [],
       lessonHistory: [],
       episodes: []
     };
@@ -238,11 +288,38 @@ const Store = {
       if (checkedTaskIds.includes(t.id)) {
         result.checkedTasks.push(t.name);
       }
-      if (t.topic) result.topics.push({ task: t.name, topic: t.topic });
-      if (t.words) {
-        t.words.forEach(w => {
-          if (w.addDate === dateStr) result.newWords.push({ text: w.text, meaning: w.meaning, task: t.name });
+
+      // 查历史 topic
+      if (t.topicHistory) {
+        t.topicHistory.forEach(h => {
+          if (h.date === dateStr) result.topics.push({ task: t.name, topic: h.text });
         });
+      }
+      // 如果是今天，也查当前 topic
+      if (dateStr === today && t.topic) {
+        result.topics.push({ task: t.name, topic: t.topic });
+      }
+
+      // 查历史 words
+      if (t.wordHistory) {
+        t.wordHistory.forEach(h => {
+          if (h.date === dateStr) h.words.forEach(w => result.newWords.push({ ...w, task: t.name }));
+        });
+      }
+      // 如果是今天，也查当前 words
+      if (dateStr === today && t.words) {
+        t.words.forEach(w => result.newWords.push({ ...w, task: t.name }));
+      }
+
+      // 查历史 phrases
+      if (t.phraseHistory) {
+        t.phraseHistory.forEach(h => {
+          if (h.date === dateStr) h.phrases.forEach(p => result.newPhrases.push({ ...p, task: t.name }));
+        });
+      }
+      // 如果是今天，也查当前 phrases
+      if (dateStr === today && t.phrases) {
+        t.phrases.forEach(p => result.newPhrases.push({ ...p, task: t.name }));
       }
     });
 
@@ -261,14 +338,15 @@ const Store = {
     }
 
     const hasContent = result.checkedTasks.length > 0 || result.lessonHistory.length > 0 ||
-      result.episodes.length > 0;
+      result.episodes.length > 0 || result.topics.length > 0 ||
+      result.newWords.length > 0 || result.newPhrases.length > 0;
     result.hasContent = hasContent;
 
     return result;
   },
 
   // ===== 每日出题 =====
-  // 收集所有生词和短语
+  // 收集所有生词和短语（含历史）
   getAllVocab() {
     const tasks = this.data.englishTasks || [];
     const words = [];
@@ -276,6 +354,9 @@ const Store = {
     tasks.forEach(t => {
       if (t.words) words.push(...t.words.map(w => ({ ...w, taskName: t.name })));
       if (t.phrases) phrases.push(...t.phrases.map(p => ({ ...p, taskName: t.name })));
+      // 合并历史
+      if (t.wordHistory) t.wordHistory.forEach(h => words.push(...h.words.map(w => ({ ...w, taskName: t.name }))));
+      if (t.phraseHistory) t.phraseHistory.forEach(h => phrases.push(...h.phrases.map(p => ({ ...p, taskName: t.name }))));
     });
     return { words, phrases };
   },

@@ -555,7 +555,8 @@ const UI = {
                 id: Store.genId(),
                 en: item.title,
                 cn: item.desc,
-                example: item.tags.join(' · ')
+                example: item.tags.join(' · '),
+                addDate: Store.todayKey()
               });
               Store.save();
             }
@@ -882,7 +883,8 @@ const UI = {
             phonetic: phoneticInput.value.trim(),
             meaning: meaningInput.value.trim(),
             pos: posInput.value.trim(),
-            done: false
+            done: false,
+            addDate: Store.todayKey()
           });
           Store.save();
           this.toast('已添加');
@@ -2733,7 +2735,7 @@ zone|n.|区域,地带
           if (!en || !cn) { this.toast('请填写英文和中文'); return; }
           const task = Store.get('englishTasks').find(t => t.id === taskId);
           if (!task.phrases) task.phrases = [];
-          task.phrases.push({ id: Store.genId(), en, cn, example });
+          task.phrases.push({ id: Store.genId(), en, cn, example, addDate: Store.todayKey() });
           Store.save();
           this.toast('已添加');
           this.closeModal();
