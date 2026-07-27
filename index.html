@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="提升工作台">
+  <meta name="theme-color" content="#ff8fa3">
+  <meta name="description" content="身材管理、英语学习、阅读记录、AI学习、财经资讯、穿搭灵感、日记备忘、灵感集、技能提升">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>自我提升工作台</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button id="menuToggle" class="icon-btn" aria-label="菜单">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      </button>
+      <div class="topbar-center" id="topbarCenter">
+        <h1 id="pageTitle">自我提升工作台</h1>
+        <div class="topbar-search" id="topbarSearch" style="display:none;">
+          <input type="text" id="searchInput" placeholder="搜索所有内容..." autocomplete="off">
+          <button id="searchClose" class="icon-btn" style="flex-shrink:0;">✕</button>
+        </div>
+      </div>
+      <button id="searchToggle" class="icon-btn" aria-label="搜索">
+        <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button id="themeToggle" class="icon-btn" aria-label="切换主题">
+        <svg id="themeIcon" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 7a5 5 0 100 10 5 5 0 000-10zm0-5v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
+    </header>
+
+    <div id="overlay" class="overlay"></div>
+
+    <nav id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="avatar">✦</div>
+        <div class="sidebar-title">自我提升</div>
+        <div class="sidebar-sub">每日精进 · 工作台</div>
+      </div>
+      <ul class="nav-list" id="navList"></ul>
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar">🐰</div>
+          <div class="user-info">
+            <div class="user-name">自由兔</div>
+            <div class="user-streak">已连续打卡 <span id="streakNum">0</span> 天</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="exportDataBtn" class="btn btn-ghost btn-block btn-sm" style="margin-top:8px;">📦 备份数据</button>
+          <button id="importDataBtn" class="btn btn-ghost btn-block btn-sm" style="margin-top:4px;">📥 恢复数据</button>
+        </div>
+      </div>
+    </nav>
+
+    <main id="main" class="main">
+      <div id="viewContainer" class="view-container"></div>
+    </main>
+
+    <div class="bottom-safe"></div>
+  </div>
+
+  <div id="lightbox" class="lightbox">
+    <span class="lightbox-close" id="lightboxClose">&times;</span>
+    <img id="lightboxImg" src="" alt="预览">
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="assets/store.js?v=26"></script>
+  <script src="assets/views.js?v=26"></script>
+  <script src="assets/app.js?v=26"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+      });
+      if (window.caches) {
+        caches.keys().then(keys => {
+          keys.forEach(key => caches.delete(key));
+        });
+      }
+    }
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+    }
+  </script>
+</body>
+</html>
