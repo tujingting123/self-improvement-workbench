@@ -2465,6 +2465,98 @@ input, textarea, select {
   line-height: 1.5;
 }
 
+/* 造句 AI 反馈 */
+.eng-quiz-answer-text {
+  font-size: 14px;
+  color: var(--text);
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.eng-quiz-fix {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(123,198,126,0.1);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  border-left: 3px solid var(--success);
+}
+
+.eng-quiz-feedback {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(116,185,255,0.1);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.eng-quiz-examples {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(253,203,110,0.08);
+  border-radius: 8px;
+}
+
+.eng-quiz-example-item {
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px dashed var(--border);
+  line-height: 1.5;
+}
+
+.eng-quiz-example-item:last-child {
+  border-bottom: none;
+}
+
+.eng-quiz-waiting {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-sub);
+  font-size: 14px;
+}
+
+.eng-quiz-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border);
+  border-top-color: #74b9ff;
+  border-radius: 50%;
+  animation: quiz-spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes quiz-spin {
+  to { transform: rotate(360deg); }
+}
+
+.eng-quiz-apikey-hint {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.eng-quiz-apikey-btn {
+  display: inline;
+  background: none;
+  border: none;
+  color: var(--primary-dark);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
 /* ===== 英语日历 ===== */
 .eng-calendar .eng-cal-day.checked {
   background: linear-gradient(135deg, rgba(116,185,255,0.25), rgba(116,185,255,0.1));

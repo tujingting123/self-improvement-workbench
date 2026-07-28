@@ -46,7 +46,7 @@ const Store = {
         }
       ],
       // 每日英语出题
-      dailyQuiz: { date: '', type: '', question: '', options: [], answer: '', userAnswer: '', correct: null },
+      dailyQuiz: { date: '', type: '', question: '', options: [], answer: '', userAnswer: '', correct: null, aiFeedback: null },
       // 阅读
       books: [],
       // AI学习
@@ -84,7 +84,8 @@ const Store = {
         theme: 'light',
         lastActiveDate: null,
         lastEnglishDate: null,
-        streak: 0
+        streak: 0,
+        geminiApiKey: ''
       }
     };
   },
@@ -361,7 +362,7 @@ const Store = {
     return { words, phrases };
   },
 
-  // 生成每日题目
+  // 生成每日题目（每天必出造句题）
   generateDailyQuiz() {
     const today = this.todayKey();
     const quiz = this.data.dailyQuiz || {};
@@ -373,50 +374,15 @@ const Store = {
     
     // 如果没有生词短语，无法出题
     if (words.length === 0 && phrases.length === 0) {
-      this.data.dailyQuiz = { date: today, type: 'none', question: '', options: [], answer: '', userAnswer: '', correct: null };
+      this.data.dailyQuiz = { date: today, type: 'none', question: '', options: [], answer: '', userAnswer: '', correct: null, aiFeedback: null };
       this.save();
       return this.data.dailyQuiz;
     }
 
-    // 随机选择题型：0=单选, 1=填空, 2=造句
-    const quizType = Math.floor(Math.random() * 3);
-    
-    let quizData = { date: today, userAnswer: '', correct: null };
+    let quizData = { date: today, userAnswer: '', correct: null, aiFeedback: null };
 
-    if (quizType === 0 && words.length >= 4) {
-      // 单选题：给出英文，选中文意思
-      const correct = words[Math.floor(Math.random() * words.length)];
-      const others = words.filter(w => w.id !== correct.id && w.meaning && w.meaning !== correct.meaning);
-      const shuffledOthers = others.sort(() => Math.random() - 0.5).slice(0, 3);
-      
-      const options = [correct, ...shuffledOthers].sort(() => Math.random() - 0.5);
-      
-      quizData.type = 'choice';
-      quizData.question = `"${correct.text}" 的中文意思是？`;
-      quizData.options = options.map(o => o.meaning || '（无释义）');
-      quizData.answer = correct.meaning || '';
-      quizData.wordId = correct.id;
-      quizData.wordText = correct.text;
-    } else if (quizType === 1 && words.length >= 1) {
-      // 填空题：给出中文，填英文单词
-      const word = words[Math.floor(Math.random() * words.length)];
-      if (word.meaning) {
-        quizData.type = 'fill';
-        quizData.question = `"${word.meaning}" 对应的英文单词是？`;
-        quizData.answer = word.text.toLowerCase().trim();
-        quizData.wordId = word.id;
-        quizData.wordText = word.text;
-        quizData.hint = word.text.charAt(0).toUpperCase() + '_'.repeat(word.text.length - 1);
-      } else {
-        // 没有释义，降级为造句题
-        quizData.type = 'sentence';
-        quizData.question = `请用 "${word.text}" 造一个英文句子`;
-        quizData.answer = '';
-        quizData.wordId = word.id;
-        quizData.wordText = word.text;
-      }
-    } else if (phrases.length >= 1) {
-      // 造句题：用短语造句
+    // 每天必出造句题
+    if (phrases.length >= 1) {
       const phrase = phrases[Math.floor(Math.random() * phrases.length)];
       quizData.type = 'sentence';
       quizData.question = `请用短语 "${phrase.en}" 造一个英文句子`;
@@ -425,7 +391,6 @@ const Store = {
       quizData.phraseText = phrase.en;
       quizData.phraseExample = phrase.example || '';
     } else {
-      // 没有合适的素材，用单词造句
       const word = words[Math.floor(Math.random() * words.length)];
       quizData.type = 'sentence';
       quizData.question = `请用 "${word.text}" 造一个英文句子`;
@@ -439,7 +404,7 @@ const Store = {
     return quizData;
   },
 
-  // 提交答题
+  // 提交答题（造句题返回 null 等待 AI 评判）
   submitQuizAnswer(userAnswer) {
     const quiz = this.data.dailyQuiz || {};
     if (!quiz.question || quiz.date !== this.todayKey()) return false;
@@ -448,15 +413,36 @@ const Store = {
     
     if (quiz.type === 'choice') {
       quiz.correct = (userAnswer === quiz.answer);
+      this.save();
+      return quiz.correct;
     } else if (quiz.type === 'fill') {
       quiz.correct = (userAnswer.toLowerCase().trim() === quiz.answer.toLowerCase().trim());
+      this.save();
+      return quiz.correct;
     } else {
-      // 造句题只要写了就算对
-      quiz.correct = userAnswer.trim().length > 3;
+      // 造句题：保存答案但不本地判分，返回 null 表示需要 AI 评判
+      quiz.correct = null;
+      this.save();
+      return null;
     }
-    
+  },
+
+  // 设置造句 AI 反馈
+  setQuizFeedback(feedback) {
+    const quiz = this.data.dailyQuiz || {};
+    quiz.aiFeedback = feedback;
+    quiz.correct = feedback.correct;
     this.save();
-    return quiz.correct;
+  },
+
+  // Gemini API Key 管理
+  getGeminiKey() {
+    return this.data.settings.geminiApiKey || '';
+  },
+
+  setGeminiKey(key) {
+    this.data.settings.geminiApiKey = key.trim();
+    this.save();
   },
 
   // 通用分类管理

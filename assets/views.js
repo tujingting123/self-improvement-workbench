@@ -717,11 +717,10 @@ const Views = {
     });
   },
 
-  // ===== 每日英语出题 =====
+  // ===== 每日英语出题（每天必出造句题，AI 评判） =====
   renderDailyQuiz(container) {
     const quiz = Store.generateDailyQuiz();
     if (!quiz.question) {
-      // 没有生词，不显示出题
       if (quiz.type === 'none') {
         const hint = document.createElement('div');
         hint.className = 'eng-quiz-card eng-quiz-empty';
@@ -737,9 +736,46 @@ const Views = {
 
     const typeLabels = { choice: '📋 选择题', fill: '✏️ 填空题', sentence: '💬 造句题' };
     const isAnswered = quiz.userAnswer !== '';
+    const hasFeedback = quiz.aiFeedback && quiz.aiFeedback.suggestions;
 
     let body = '';
-    if (isAnswered) {
+    if (hasFeedback) {
+      // 显示 AI 反馈
+      const fb = quiz.aiFeedback;
+      body = `
+        <div class="eng-quiz-type">💬 造句题</div>
+        <div class="eng-quiz-question">${Views.escape(quiz.question)}</div>
+        <div class="eng-quiz-answer-text">📝 你的答案：${Views.escape(quiz.userAnswer)}</div>
+        <div class="eng-quiz-result ${fb.correct ? 'correct' : 'wrong'}">
+          ${fb.correct ? '✅ 回答正确！' : '❌ 需要改进'}
+        </div>
+        ${!fb.correct && fb.correctedSentence ? `<div class="eng-quiz-fix"><strong>🔧 修改建议：</strong>${Views.escape(fb.correctedSentence)}</div>` : ''}
+        <div class="eng-quiz-feedback"><strong>💡 老师点评：</strong>${Views.escape(fb.suggestions || '')}</div>
+        ${fb.examples && fb.examples.length > 0 ? `
+        <div class="eng-quiz-examples">
+          <strong>📖 参考例句：</strong>
+          ${fb.examples.map(ex => `<div class="eng-quiz-example-item">${Views.escape(ex)}</div>`).join('')}
+        </div>` : ''}
+      `;
+    } else if (isAnswered && quiz.type === 'sentence') {
+      // 已提交，等待 AI 评判或没有 API Key
+      if (quiz.correct === null) {
+        // 还没评判
+        body = `
+          <div class="eng-quiz-type">💬 造句题</div>
+          <div class="eng-quiz-question">${Views.escape(quiz.question)}</div>
+          <div class="eng-quiz-answer-text">📝 你的答案：${Views.escape(quiz.userAnswer)}</div>
+          <div class="eng-quiz-waiting" id="quizWaiting">
+            <span class="eng-quiz-spinner"></span> AI 正在评判你的句子...
+          </div>
+          <div style="margin-top:10px;">
+            <button class="eng-quiz-submit" id="quizRetry">🔄 重新评判</button>
+          </div>
+          ${!Store.getGeminiKey() ? `<div class="eng-quiz-apikey-hint">💡 需要 Gemini API Key 才能AI评判<br><button class="eng-quiz-apikey-btn" id="quizSetKey">🔑 设置 API Key</button></div>` : ''}
+        `;
+      }
+    } else if (isAnswered) {
+      // 选择题或填空题已答
       const correctIcon = quiz.correct ? '✅ 回答正确！' : '❌ 回答错误';
       body = `
         <div class="eng-quiz-type">${typeLabels[quiz.type] || '每日一题'}</div>
@@ -747,29 +783,16 @@ const Views = {
         <div class="eng-quiz-result ${quiz.correct ? 'correct' : 'wrong'}">
           ${correctIcon}
           ${!quiz.correct ? `<div style="margin-top:4px;font-size:13px;">正确答案：<strong>${Views.escape(quiz.answer)}</strong></div>` : ''}
-          ${quiz.type === 'sentence' ? `<div style="margin-top:4px;font-size:12px;color:var(--text-sub);">你的答案：${Views.escape(quiz.userAnswer)}</div>` : ''}
         </div>
-        ${quiz.type === 'sentence' && quiz.phraseExample ? `<div class="eng-quiz-example">💡 参考例句：${Views.escape(quiz.phraseExample)}</div>` : ''}
       `;
     } else {
-      body = `<div class="eng-quiz-type">${typeLabels[quiz.type] || '每日一题'}</div>`;
+      // 未答
+      body = `<div class="eng-quiz-type">💬 造句题</div>`;
       body += `<div class="eng-quiz-question">${Views.escape(quiz.question)}</div>`;
-
-      if (quiz.type === 'choice') {
-        body += '<div class="eng-quiz-options">';
-        quiz.options.forEach((opt, i) => {
-          body += `<button class="eng-quiz-option" data-answer="${Views.escape(opt)}">${String.fromCharCode(65+i)}. ${Views.escape(opt)}</button>`;
-        });
-        body += '</div>';
-      } else if (quiz.type === 'fill') {
-        if (quiz.hint) {
-          body += `<div class="eng-quiz-hint">💡 提示：${quiz.hint}</div>`;
-        }
-        body += `<input class="eng-quiz-input" id="quizInput" placeholder="输入英文单词..." autocomplete="off">`;
-        body += `<button class="eng-quiz-submit" id="quizSubmit">提交答案</button>`;
-      } else {
-        body += `<textarea class="eng-quiz-textarea" id="quizInput" placeholder="在这里写下你的句子..." rows="3"></textarea>`;
-        body += `<button class="eng-quiz-submit" id="quizSubmit">提交答案</button>`;
+      body += `<textarea class="eng-quiz-textarea" id="quizInput" placeholder="在这里写下你的英文句子..." rows="3"></textarea>`;
+      body += `<button class="eng-quiz-submit" id="quizSubmit">✍️ 提交答案</button>`;
+      if (!Store.getGeminiKey()) {
+        body += `<div class="eng-quiz-apikey-hint">🔑 <button class="eng-quiz-apikey-btn" id="quizSetKey">设置 Gemini API Key</button> 获取 AI 评判</div>`;
       }
     }
 
@@ -780,51 +803,44 @@ const Views = {
     if (!isAnswered) {
       const submitBtn = document.getElementById('quizSubmit');
       const inputEl = document.getElementById('quizInput');
+      const setKeyBtn = document.getElementById('quizSetKey');
 
-      const doSubmit = (answer) => {
-        const isCorrect = Store.submitQuizAnswer(answer);
-        // 刷新出题卡片
-        const oldCard = document.getElementById('dailyQuizCard');
-        if (oldCard) {
-          const newQuiz = Store.data.dailyQuiz;
-          const correctIcon = isCorrect ? '✅ 回答正确！' : '❌ 回答错误';
-          oldCard.innerHTML = `
-            <div class="eng-quiz-type">${typeLabels[newQuiz.type] || '每日一题'}</div>
-            <div class="eng-quiz-question">${Views.escape(newQuiz.question)}</div>
-            <div class="eng-quiz-result ${isCorrect ? 'correct' : 'wrong'}">
-              ${correctIcon}
-              ${!isCorrect ? `<div style="margin-top:4px;font-size:13px;">正确答案：<strong>${Views.escape(newQuiz.answer)}</strong></div>` : ''}
-              ${newQuiz.type === 'sentence' ? `<div style="margin-top:4px;font-size:12px;color:var(--text-sub);">你的答案：${Views.escape(newQuiz.userAnswer)}</div>` : ''}
-            </div>
-            ${newQuiz.type === 'sentence' && newQuiz.phraseExample ? `<div class="eng-quiz-example">💡 参考例句：${Views.escape(newQuiz.phraseExample)}</div>` : ''}
-          `;
-        }
-        UI.toast(isCorrect ? '太棒了！🎉' : '再想想，下次一定对！');
-      };
-
-      if (submitBtn) {
+      if (submitBtn && inputEl) {
         submitBtn.onclick = () => {
-          const val = inputEl ? inputEl.value.trim() : '';
+          const val = inputEl.value.trim();
           if (!val) { UI.toast('请输入答案'); return; }
-          doSubmit(val);
+          UI.submitSentenceAnswer(val);
         };
-      }
-
-      // 选项按钮
-      quizCard.querySelectorAll('.eng-quiz-option').forEach(btn => {
-        btn.onclick = () => doSubmit(btn.dataset.answer);
-      });
-
-      // 回车提交
-      if (inputEl) {
         inputEl.onkeydown = (e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const val = inputEl.value.trim();
             if (!val) { UI.toast('请输入答案'); return; }
-            doSubmit(val);
+            UI.submitSentenceAnswer(val);
           }
         };
+      }
+      if (setKeyBtn) {
+        setKeyBtn.onclick = () => UI.openGeminiKeyModal();
+      }
+    }
+
+    // 已提交但等待评判
+    if (isAnswered && quiz.type === 'sentence' && quiz.correct === null) {
+      const retryBtn = document.getElementById('quizRetry');
+      const setKeyBtn2 = document.getElementById('quizSetKey');
+      if (retryBtn) {
+        retryBtn.onclick = () => {
+          // 重置答案状态，重新评判
+          const q = Store.data.dailyQuiz;
+          q.correct = null;
+          q.aiFeedback = null;
+          Store.save();
+          UI.submitSentenceAnswer(q.userAnswer);
+        };
+      }
+      if (setKeyBtn2) {
+        setKeyBtn2.onclick = () => UI.openGeminiKeyModal();
       }
     }
   },
