@@ -1,4 +1,4 @@
-// ===== 数据存储�? =====
+// ===== 数据存储层 =====
 const Store = {
   KEY: 'self_improvement_data_v2',
 
@@ -8,17 +8,17 @@ const Store = {
     return {
       checkins: {},
       fitnessTasks: [
-        { id: 'f1', name: '普拉�?', duration: '半小�?', custom: false },
-        { id: 'f2', name: '肚子按摩', duration: '半小�?', custom: false },
-        { id: 'f3', name: '盆底肌练�?', duration: '半小�?', custom: false }
+        { id: 'f1', name: '普拉提', duration: '半小时', custom: false },
+        { id: 'f2', name: '肚子按摩', duration: '半小时', custom: false },
+        { id: 'f3', name: '盆底肌练习', duration: '半小时', custom: false }
       ],
       // 体重记录: [{ date: '2026-07-26', weight: 55.5 }]
       weightRecords: [],
-      // 英语任务 �? 新概�? + EnglishPod
+      // 英语任务 “ 新概忘 + EnglishPod
       englishTasks: [
         { 
           id: 'e1', 
-          name: '新概念英�?', 
+          name: '新概念英语', 
           topic: '', 
           words: [],
           phrases: [],
@@ -59,36 +59,36 @@ const Store = {
       financeLastFetch: null,
       // 穿搭
       outfits: [],
-      // 日记�?
+      // 日记本
       diaries: [],
-      // 备忘�?
+      // 备忘录
       memos: [],
-      // 灵感�?
+      // 灵感集
       inspirations: [],
-      inspirationCategories: ['PPT设计', '海报设计', '配色方案', '文案灵感', '排版参�?'],
+      inspirationCategories: ['PPT设计', '海报设计', '配色方案', '文案灵感', '排版参考'],
       // 知识库已添加记录
       addedKnowledgeIds: [],
-      // 知识库智能轮�? �? 已读追踪 + 用户自定义知�?
+      // 知识库智能轮换 “ 已读追踪 + 用户自定义知识
       financeKnowledgeRead: {},   // { date: '2026-07-28', readIds: ['f0','f1',...], todayIds: ['f0'], cycle: 1 }
       generalKnowledgeRead: {},   // 同上
-      userKnowledge: [],          // 用户手动添加的知�? [{ id, cat, title, desc, tags, addDate }]
+      userKnowledge: [],          // 用户手动添加的知识 [{ id, cat, title, desc, tags, addDate }]
       // 财经知识收藏
       financeFavorites: [],       // [{ id, title, desc, detail, tags, addDate }]
       // 培训知识轮换 + 收藏
       trainingKnowledgeRead: {},  // 培训知识轮换追踪
       trainingFavorites: [],      // 培训文章收藏
-      trainingRSSItems: [],       // RSS 抓取的培训文�?
+      trainingRSSItems: [],       // RSS 抓取的培训文章
       trainingLastFetch: null,    // 上次采集时间
-      // 技能提�? - 文案表达
+      // 技能提升 - 文案表达
       copywritingItems: [],
-      copywritingCategories: ['标题技�?', '金句收集', '故事结构', '营销文案', '演讲�?'],
-      // 技能提�? - 视频剪辑
+      copywritingCategories: ['标题技巧', '金句收集', '故事结构', '营销文案', '演讲程'],
+      // 技能提升 - 视频剪辑
       editingItems: [],
-      editingCategories: ['转场技�?', '调色教程', '特效模板', '配乐素材', '剪辑思路'],
-      // 技能提�? - 海报制作
+      editingCategories: ['转场技巧', '调色教程', '特效模板', '配乐素材', '剪辑思路'],
+      // 技能提升 - 海报制作
       posterItems: [],
-      posterCategories: ['排版设计', '字体搭配', '色彩理论', '构图技�?', '品牌设计'],
-      // 周目�?
+      posterCategories: ['排版设计', '字体搭配', '色彩理论', '构图技巧', '品牌设计'],
+      // 周目标
       weeklyGoals: { copywriting: 5, editing: 5, poster: 5 },
       goalWeekStart: '',  // 本周起始日期 YYYY-MM-DD
       settings: {
@@ -112,17 +112,17 @@ const Store = {
     } else {
       this.data = this.defaults();
     }
-    // v38 修复：清除旧格式的知识库 tracker（没�? todayIds 字段的）
+    // v38 修复：清除旧格式的知识库 tracker（没本 todayIds 字段的）
     this.migrateKnowledgeTracker();
     this.updateStreak();
-    // 清理已废弃的雅思备考任�?
+    // 清理已废弃的雅思备考任力
     this.cleanupLegacyData();
-    // 英语每日归档�?0点清空，历史保留�?
+    // 英语每日归档：0点清空，历史保留：
     this.archiveDailyEnglish();
     return this.data;
   },
 
-  // v38: 清除旧格式知识库 tracker（没�? todayIds 字段会导致推荐空白）
+  // v38: 清除旧格式知识库 tracker（没本 todayIds 字段会导致推荐空白）
   migrateKnowledgeTracker() {
     ['financeKnowledgeRead', 'generalKnowledgeRead', 'trainingKnowledgeRead'].forEach(k => {
       const t = this.data[k];
@@ -138,7 +138,7 @@ const Store = {
     const today = this.todayKey();
     const lastDate = this.data.settings.lastEnglishDate;
     
-    // 首次使用或已是今天，不归�?
+    // 首次使用或已是今天，不归档
     if (!lastDate || lastDate === today) {
       this.data.settings.lastEnglishDate = today;
       return;
@@ -174,11 +174,11 @@ const Store = {
 
   // 清理旧版遗留数据
   cleanupLegacyData() {
-    // 移除雅思备考任�? e3
+    // 移除雅思备考任力 e3
     if (this.data.englishTasks) {
       this.data.englishTasks = this.data.englishTasks.filter(t => t.id !== 'e3');
     }
-    // 移除 checkins �? e3 的打卡记�?
+    // 移除 checkins 三 e3 的打卡记录
     if (this.data.checkins) {
       Object.keys(this.data.checkins).forEach(date => {
         if (this.data.checkins[date].english) {
@@ -314,7 +314,7 @@ const Store = {
         result.checkedTasks.push(t.name);
       }
 
-      // 查历�? topic
+      // 查历史 topic
       if (t.topicHistory) {
         t.topicHistory.forEach(h => {
           if (h.date === dateStr) result.topics.push({ task: t.name, topic: h.text });
@@ -325,7 +325,7 @@ const Store = {
         result.topics.push({ task: t.name, topic: t.topic });
       }
 
-      // 查历�? words
+      // 查历史 words
       if (t.wordHistory) {
         t.wordHistory.forEach(h => {
           if (h.date === dateStr) h.words.forEach(w => result.newWords.push({ ...w, task: t.name }));
@@ -336,7 +336,7 @@ const Store = {
         t.words.forEach(w => result.newWords.push({ ...w, task: t.name }));
       }
 
-      // 查历�? phrases
+      // 查历史 phrases
       if (t.phraseHistory) {
         t.phraseHistory.forEach(h => {
           if (h.date === dateStr) h.phrases.forEach(p => result.newPhrases.push({ ...p, task: t.name }));
@@ -371,7 +371,7 @@ const Store = {
   },
 
   // ===== 每日出题 =====
-  // 收集所有生词和短语（含历史�?
+  // 收集所有生词和短语（含历史：
   getAllVocab() {
     const tasks = this.data.englishTasks || [];
     const words = [];
@@ -396,7 +396,7 @@ const Store = {
 
     const { words, phrases } = this.getAllVocab();
     
-    // 如果没有生词短语，无法出�?
+    // 如果没有生词短语，无法出题
     if (words.length === 0 && phrases.length === 0) {
       this.data.dailyQuiz = { date: today, type: 'none', question: '', options: [], answer: '', userAnswer: '', correct: null, aiFeedback: null };
       this.save();
@@ -405,7 +405,7 @@ const Store = {
 
     let quizData = { date: today, userAnswer: '', correct: null, aiFeedback: null };
 
-    // 每天必出造句�?
+    // 每天必出造句题
     if (phrases.length >= 1) {
       const phrase = phrases[Math.floor(Math.random() * phrases.length)];
       quizData.type = 'sentence';
@@ -440,7 +440,7 @@ const Store = {
     } else if (quiz.type === 'fill') {
       quiz.correct = (userAnswer.toLowerCase().trim() === quiz.answer.toLowerCase().trim());
     } else {
-      // 造句题：写了超过3个字符就算完�?
+      // 造句题：写了超过3个字符就算完成
       quiz.correct = userAnswer.trim().length > 3;
     }
     
@@ -471,7 +471,7 @@ const Store = {
     this.save();
   },
 
-  // 获取本周起始日期（周一�?
+  // 获取本周起始日期（周一：
   getWeekStart() {
     const d = new Date();
     const day = d.getDay() || 7;
@@ -479,7 +479,7 @@ const Store = {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   },
 
-  // 检查并更新周目标起始日�?
+  // 检查并更新周目标起始日本
   ensureWeekGoal() {
     const ws = this.getWeekStart();
     if (this.data.goalWeekStart !== ws) {
@@ -490,14 +490,14 @@ const Store = {
     return ws;
   },
 
-  // 获取本周新增数（�? addDate 过滤�?
+  // 获取本周新增数（按 addDate 过滤：
   getWeekNewCount(storeKey) {
     const ws = this.getWeekStart();
     const items = this.data[storeKey] || [];
     return items.filter(i => i.addDate && i.addDate >= ws).length;
   },
 
-  // 获取仪表盘统计数�?
+  // 获取仪表盘统计数捍
   getDashboardStats() {
     const today = this.todayKey();
     const ws = this.getWeekStart();
@@ -514,7 +514,7 @@ const Store = {
       if (hasAny) weekCheckinDays++;
     }
 
-    // 今日各模块进�?
+    // 今日各模块进度
     const fitnessTasks = this.data.fitnessTasks || [];
     const fitnessTotal = fitnessTasks.length;
     const fitnessDone = fitnessTasks.filter(t => this.getCheckin('fitness', t.id)).length;
@@ -545,7 +545,7 @@ const Store = {
       if (Object.values(day).some(mod => Object.values(mod).some(Boolean))) monthCheckinDays++;
     }
 
-    // 最近内�?
+    // 最近内定
     const recentInspirations = (this.data.inspirations || []).slice(0, 3);
     const recentSkills = [
       ...(this.data.copywritingItems || []).map(i => ({ ...i, _module: 'copywriting' })),
@@ -553,7 +553,7 @@ const Store = {
       ...(this.data.posterItems || []).map(i => ({ ...i, _module: 'poster' }))
     ].sort((a, b) => (b.addDate || '').localeCompare(a.addDate || '')).slice(0, 3);
 
-    // 最近在�?
+    // 最近在语
     const readingBook = (this.data.books || []).find(b => b.status === 'reading');
 
     return {
@@ -584,7 +584,7 @@ const Store = {
       result.push({
         date: ds,
         day: d.getDate(),
-        weekday: ['�?','一','�?','�?','�?','�?','�?'][d.getDay()],
+        weekday: ['日','一','二','三','四','五','六'][d.getDay()],
         count,
         isToday: ds === this.todayKey()
       });
@@ -592,9 +592,9 @@ const Store = {
     return result;
   },
 
-  // ===== 知识库智能轮�? =====
+  // ===== 知识库智能轮换 =====
 
-  // 获取当日知识推荐（同一天始终返回相同内容，不随刷新变化�?
+  // 获取当日知识推荐（同一天始终返回相同内容，不随刷新变化：
   // dbType: 'finance' | 'general'
   getDailyKnowledge(dbType, knowledgeDB, count = 5) {
     const today = this.todayKey();
@@ -602,18 +602,18 @@ const Store = {
     const key = keyMap[dbType] || 'generalKnowledgeRead';
     let tracker = this.data[key] || {};
     
-    // 跨天了：先把昨天�? todayIds 正式标记为已读，然后选今天的
+    // 跨天了：先把昨天的 todayIds 正式标记为已读，然后选今天的
     if (!tracker.date || tracker.date !== today) {
       const prevTodayIds = tracker.todayIds || [];
       
-      // 跨天时，把昨天的 todayIds 合并�? readIds
+      // 跨天时，把昨天的 todayIds 合并列 readIds
       if (prevTodayIds.length > 0) {
         const prevRead = tracker.readIds || [];
         const merged = [...new Set([...prevRead, ...prevTodayIds])];
         tracker.readIds = merged;
       }
       
-      // 检查是否上一轮全部读�?
+      // 检查是否上一轮全部读定
       const totalItems = knowledgeDB.length;
       const currentRead = tracker.readIds || [];
       if (currentRead.length >= totalItems) {
@@ -647,10 +647,10 @@ const Store = {
       return { items: picked, cycle: tracker.cycle, total: knowledgeDB.length, read: (tracker.readIds || []).length + tracker.todayIds.length };
     }
     
-    // 同一天：直接返回缓存�? todayIds 对应的条�?
+    // 同一天：直接返回缓存的 todayIds 对应的条目
     const todayIds = tracker.todayIds || [];
     
-    // 兜底：如�? todayIds 为空（可能是旧数据迁移），重新选取
+    // 兜底：如构 todayIds 为空（可能是旧数据迁移），重新选取
     if (todayIds.length === 0) {
       const unread = knowledgeDB.filter(item => !(tracker.readIds || []).includes(item.id));
       if (unread.length === 0) {
@@ -675,7 +675,7 @@ const Store = {
     return { items, cycle, total: knowledgeDB.length, read: (tracker.readIds || []).length + todayIds.length };
   },
 
-  // 获取知识库阅读进�?
+  // 获取知识库阅读进度
   getKnowledgeProgress(dbType, knowledgeDB) {
     const keyMap = { finance: 'financeKnowledgeRead', training: 'trainingKnowledgeRead', general: 'generalKnowledgeRead' };
     const key = keyMap[dbType] || 'generalKnowledgeRead';
@@ -689,7 +689,7 @@ const Store = {
     return { read, total, cycle, percent: total > 0 ? Math.round(read / total * 100) : 0 };
   },
 
-  // 重置知识库阅读进�?
+  // 重置知识库阅读进度
   resetKnowledgeProgress(dbType) {
     const keyMap = { finance: 'financeKnowledgeRead', training: 'trainingKnowledgeRead', general: 'generalKnowledgeRead' };
     const key = keyMap[dbType] || 'generalKnowledgeRead';
@@ -697,7 +697,7 @@ const Store = {
     this.save();
   },
 
-  // 添加用户自定义知�?
+  // 添加用户自定义知识
   addUserKnowledge(item) {
     if (!this.data.userKnowledge) this.data.userKnowledge = [];
     this.data.userKnowledge.push(item);
@@ -705,14 +705,14 @@ const Store = {
     return item;
   },
 
-  // 删除用户自定义知�?
+  // 删除用户自定义知识
   deleteUserKnowledge(id) {
     if (!this.data.userKnowledge) return;
     this.data.userKnowledge = this.data.userKnowledge.filter(k => k.id !== id);
     this.save();
   },
 
-  // 获取用户自定义知�?
+  // 获取用户自定义知识
   getUserKnowledge() {
     return this.data.userKnowledge || [];
   },
@@ -754,21 +754,21 @@ const Store = {
     let tracker = this.data[key] || {};
     const today = this.todayKey();
     
-    // 确保 tracker �? todayIds
+    // 确保 tracker 本 todayIds
     if (!tracker.todayIds) tracker.todayIds = [];
     if (!tracker.readIds) tracker.readIds = [];
     
-    // 把当前这条从 todayIds 移除，加�? readIds
+    // 把当前这条从 todayIds 移除，加入 readIds
     tracker.todayIds = tracker.todayIds.filter(id => id !== currentId);
     if (!tracker.readIds.includes(currentId)) {
       tracker.readIds.push(currentId);
     }
     
-    // 从未读池选一条新�?
+    // 从未读池选一条新的
     const unread = knowledgeDB.filter(item => !tracker.readIds.includes(item.id) && !tracker.todayIds.includes(item.id));
     
     if (unread.length === 0) {
-      // 全部已读，重�?
+      // 全部已读，重置
       tracker.readIds = [];
       tracker.todayIds = [];
       tracker.cycle = (tracker.cycle || 0) + 1;
@@ -819,7 +819,7 @@ const Store = {
     return (this.data.trainingFavorites || []).some(f => f.id === id);
   },
 
-  // 换一条培训知�?
+  // 换一条培训知识
   skipTrainingKnowledge(currentId, knowledgeDB) {
     const key = 'trainingKnowledgeRead';
     let tracker = this.data[key] || {};
@@ -864,7 +864,7 @@ const Store = {
     try {
       const imported = JSON.parse(jsonStr);
       if (!imported || typeof imported !== 'object') throw new Error('格式无效');
-      // 合并数据（保留导入的数据，补充默认值中的新字段�?
+      // 合并数据（保留导入的数据，补充默认值中的新字段：
       this.data = { ...this.defaults(), ...imported };
       this.save();
       return true;
