@@ -451,17 +451,48 @@ const UI = {
 请严格用JSON格式回复，不要有任何其他文字：
 {"correct":true,"correctedSentence":"正确的句子","suggestions":"中文修改建议","examples":["例句1","例句2","例句3"]}`;
 
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
-          })
+      let resp;
+      
+      // 先尝试直连 Gemini
+      try {
+        resp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+            })
+          }
+        );
+      } catch (e) {
+        // 直连失败，尝试代理
+        try {
+          resp = await fetch(
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
+            )}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+              })
+            }
+          );
+        } catch (e2) {
+          Store.setQuizFeedback({
+            correct: userSentence.trim().length > 3,
+            correctedSentence: userSentence,
+            suggestions: `网络连接失败，请检查网络后重试。`,
+            examples: []
+          });
+          Views.render('english');
+          return;
         }
-      );
+      }
 
       if (!resp.ok) {
         const errText = await resp.text();
@@ -521,18 +552,22 @@ const UI = {
   openGeminiKeyModal() {
     const currentKey = Store.getGeminiKey();
     this.openModal({
-      title: '🔑 设置 Gemini API Key',
+      title: '🔑 设置 AI API Key',
       body: `
         <div style="font-size:13px;color:var(--text-sub);margin-bottom:12px;">
-          获取免费 API Key：<br>
-          1. 打开 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary-dark);">aistudio.google.com/apikey</a><br>
+          <strong>方案一（推荐）：阿里云百炼</strong><br>
+          1. 打开 bailian.console.aliyun.com<br>
+          2. 用支付宝/淘宝登录<br>
+          3. 右上角头像 → API-KEY 管理<br>
+          4. 创建新的 API Key<br><br>
+          <strong>方案二：Google Gemini</strong><br>
+          1. 打开 aistudio.google.com/apikey<br>
           2. 用 Google 账号登录<br>
-          3. 点击 "Create API Key"<br>
-          4. 复制 Key 粘贴到下方
+          3. 点击 "Create API Key"
         </div>
         <div class="field">
-          <label class="label">API Key</label>
-          <input class="input" id="gk_input" value="${Views.escape(currentKey)}" placeholder="粘贴 Gemini API Key...">
+          <label class="label">API Key（支持 Gemini 或阿里云百炼）</label>
+          <input class="input" id="gk_input" value="${Views.escape(currentKey)}" placeholder="粘贴 API Key...">
         </div>
       `,
       footer: '<button class="btn btn-primary btn-block" id="gk_save">保存</button>',
