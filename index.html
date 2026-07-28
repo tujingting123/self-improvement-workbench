@@ -5,29 +5,6 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <!-- v49: 强制缓存清除 + 动态加载最新JS -->
-  <script>
-    (function() {
-      var VERSION = 'v50';
-      var stored = localStorage.getItem('_app_version');
-      // 每次加载都强制带版本号参数，绕过缓存
-      var scripts = [
-        './assets/store.js?v=' + VERSION + '&t=' + Date.now(),
-        './assets/views.js?v=' + VERSION + '&t=' + Date.now(),
-        './assets/app.js?v=' + VERSION + '&t=' + Date.now()
-      ];
-      scripts.forEach(function(src) {
-        var s = document.createElement('script');
-        s.src = src;
-        s.async = false;
-        document.head.appendChild(s);
-      });
-      // 如果版本变了，记录一下
-      if (stored !== VERSION) {
-        localStorage.setItem('_app_version', VERSION);
-      }
-    })();
-  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -97,6 +74,8 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- JS 通过上方脚本动态加载，带时间戳参数强制绕过缓存 -->
+  <script src="./assets/store.js?v=50"></script>
+  <script src="./assets/views.js?v=50"></script>
+  <script src="./assets/app.js?v=50"></script>
 </body>
 </html>
