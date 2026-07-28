@@ -404,7 +404,7 @@ const Store = {
     return quizData;
   },
 
-  // 提交答题（造句题返回 null 等待 AI 评判）
+  // 提交答题
   submitQuizAnswer(userAnswer) {
     const quiz = this.data.dailyQuiz || {};
     if (!quiz.question || quiz.date !== this.todayKey()) return false;
@@ -413,26 +413,15 @@ const Store = {
     
     if (quiz.type === 'choice') {
       quiz.correct = (userAnswer === quiz.answer);
-      this.save();
-      return quiz.correct;
     } else if (quiz.type === 'fill') {
       quiz.correct = (userAnswer.toLowerCase().trim() === quiz.answer.toLowerCase().trim());
-      this.save();
-      return quiz.correct;
     } else {
-      // 造句题：保存答案但不本地判分，返回 null 表示需要 AI 评判
-      quiz.correct = null;
-      this.save();
-      return null;
+      // 造句题：写了超过3个字符就算完成
+      quiz.correct = userAnswer.trim().length > 3;
     }
-  },
-
-  // 设置造句 AI 反馈
-  setQuizFeedback(feedback) {
-    const quiz = this.data.dailyQuiz || {};
-    quiz.aiFeedback = feedback;
-    quiz.correct = feedback.correct;
+    
     this.save();
+    return quiz.correct;
   },
 
   // Gemini API Key 管理
