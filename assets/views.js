@@ -2285,6 +2285,7 @@ const Views = {
       { id: 'kw7', cat: '文案写作', title: '文案的"滑梯效应"', desc: '好的文案像滑梯——读者读完第一句就想读第二句，直到读完。开头用短句、用问句、用悬念，让读者停不下来。', tags: ['滑梯效应', '开头'], target: 'copywritingItems', targetName: '文案表达' },
       { id: 'kw8', cat: '文案写作', title: '产品卖点提炼法：FAB法则', desc: 'F(特点)→A(优势)→B(利益)。不要说"这个杯子500ml"，要说"500ml大容量(F)→不用频繁加水(A)→开会2小时不打断思路(B)"。', tags: ['FAB', '卖点'], target: 'copywritingItems', targetName: '文案表达' },
       { id: 'kw9', cat: '文案写作', title: '朋友圈文案的3秒法则', desc: '朋友圈折叠后只显示前3行。前3行=吸引点击的"广告位"。用emoji、问句、反常识开头，让人忍不住点"全文"。', tags: ['朋友圈', '3秒法则'], target: 'copywritingItems', targetName: '文案表达' },
+      { id: 'kw58', cat: '文案写作', title: '文案的情绪价值—— 让读者"有感"', desc: '好文案不只在传递信息，更在唤起情绪。方法：①用具体场景（"加班到凌晨的你"）②用感官描写（"咬一口酥到掉渣"）③用身份认同（"每个努力搞钱的女生"）。', tags: ['情绪', '共鸣'], target: 'copywritingItems', targetName: '文案表达' },
       // ===== 视频剪辑 =====
       { id: 'kw10', cat: '视频剪辑', title: '剪映关键帧入门', desc: '关键帧=记录某个时间点的画面状态。设置起始关键帧→移动时间轴→改变画面参数→自动生成动画。缩放、位移、旋转、透明度都能做动画。', tags: ['剪映', '关键帧', '入门'], target: 'editingItems', targetName: '视频剪辑' },
       { id: 'kw11', cat: '视频剪辑', title: '5种常用转场技巧', desc: '①硬切（最常用）②淡入淡出（抒情）③缩放转场（快节奏）④旋转转场（炫酷）⑤遮罩转场（高级）。新手先练硬切和淡入淡出。', tags: ['转场', '技巧'], target: 'editingItems', targetName: '视频剪辑' },
@@ -2295,6 +2296,7 @@ const Views = {
       { id: 'kw16', cat: '视频剪辑', title: '拍摄前必做的3件事', desc: '①清理镜头（指纹毁所有）②锁定曝光/对焦（避免忽明忽暗）③检查收音（外接麦克风>手机自带）。前期做好的1分钟=后期省10分钟。', tags: ['拍摄', '准备'], target: 'editingItems', targetName: '视频剪辑' },
       { id: 'kw17', cat: '视频剪辑', title: '分镜脚本—— 告别拍摄时的"不知道拍什么"', desc: '每个镜头写三要素：画面内容+运镜方式+时长。一个30秒短视频约5-8个镜头。提前写好分镜，拍摄效率提升3倍。', tags: ['分镜', '脚本'], target: 'editingItems', targetName: '视频剪辑' },
       { id: 'kw18', cat: '视频剪辑', title: '手机拍摄稳定技巧', desc: '①双手持机+手肘贴身体 ②走路时膝盖微弯 ③利用栏杆/桌面做支撑 ④后期用剪映"防抖"功能。手机稳定器是性价比最高的投资。', tags: ['拍摄', '稳定'], target: 'editingItems', targetName: '视频剪辑' },
+      { id: 'kw59', cat: '视频剪辑', title: '绿幕抠像入门', desc: '①背景用纯色绿布（不要有褶皱）②光线均匀打在绿布上 ③人物离绿布至少1米（减少绿色反光）④剪映"色度抠图"一键抠像。低成本出大片效果。', tags: ['绿幕', '抠像'], target: 'editingItems', targetName: '视频剪辑' },
       // ===== 海报设计 =====
       { id: 'kw19', cat: '海报设计', title: '排版四原则：CRAP', desc: 'Contrast（对比）：重要元素要突出；Repetition（重复）：统一字体/颜色；Alignment（对齐）：元素间有视觉联系；Proximity（亲密性）：相关内容放一起。', tags: ['排版', '设计原则'], target: 'posterItems', targetName: '海报制作' },
       { id: 'kw20', cat: '海报设计', title: '配色速成：60-30-10法则', desc: '60%主色（背景/大面积）、30%辅助色（重点区域）、10%强调色（按钮/关键文字）。推荐工具：Coolors.co 一键生成配色方案。', tags: ['配色', '法则'], target: 'posterItems', targetName: '海报制作' },
@@ -2305,6 +2307,7 @@ const Views = {
       { id: 'kw25', cat: '海报设计', title: '设计中的"视觉层次"', desc: '让读者3秒内知道先看什么后看什么。方法：①最大=最重要 ②最亮=最重要 ③对比最强=最重要。一张海报只设1个视觉焦点。', tags: ['视觉层次', '设计'], target: 'posterItems', targetName: '海报制作' },
       { id: 'kw26', cat: '海报设计', title: '品牌色的力量', desc: '选1个品牌主色，在所有海报中重复使用→形成视觉记忆。如Tiffany蓝、爱马仕橙。你的品牌色是什么？建议选一个，坚持用。', tags: ['品牌', '配色'], target: 'posterItems', targetName: '海报制作' },
       { id: 'kw27', cat: '海报设计', title: '一张好海报的5秒测试', desc: '给朋友看5秒后拿走→问他记得什么。如果说不出来，说明信息不聚焦。好海报=5秒内传达1个核心信息。', tags: ['测试', '聚焦'], target: 'posterItems', targetName: '海报制作' },
+      { id: 'kw60', cat: '海报设计', title: 'PS/AI常用快捷键速记', desc: 'Ctrl+T(自由变换)、Ctrl+J(复制图层)、Ctrl+Shift+N(新建图层)、Ctrl+E(合并图层)、[ ]调整笔刷大小。记住这10个快捷键，效率翻倍。', tags: ['PS', '快捷键'], target: 'posterItems', targetName: '海报制作' },
       // ===== 英语学习 =====
       { id: 'kw28', cat: '英语学习', title: '影子跟读法（Shadowing）', desc: '播放英语音频→延迟0.5秒跟读→模仿语音语调语速。每天15分钟，一个月口语流利度明显提升。推荐材料：EnglishPod、BBC 6 Minute English。', tags: ['口语', '跟读', '方法'], target: 'english', targetName: '英语' },
       { id: 'kw29', cat: '英语学习', title: '雅思口语Part2万能模板', desc: '开头：I\'d like to talk about...；描述：who/what/when/where；感受：how I felt / why it\'s important；结尾：That\'s pretty much what I wanted to say.', tags: ['雅思', '口语', '模板'], target: 'english', targetName: '英语' },
@@ -2314,6 +2317,8 @@ const Views = {
       { id: 'kw33', cat: '英语学习', title: '看美剧学英语的正确姿势', desc: '不是开着中文字幕刷剧！正确方法：①第一遍纯英文无字幕→②第二遍开英文字幕查生词→③第三遍跟读模仿。推荐《老友记》入门。', tags: ['美剧', '口语'], target: 'english', targetName: '英语' },
       { id: 'kw34', cat: '英语学习', title: '英语思维—— 别再"中译英"了', desc: '说英语时不要先在脑子里想中文再翻译。练习方法：①用英语描述你正在做的事（自言自语）②用英语写日记③看到物品直接想英文名。', tags: ['英语思维', '口语'], target: 'english', targetName: '英语' },
       { id: 'kw35', cat: '英语学习', title: '发音突破：连读和弱读', desc: '英语流畅的秘密：连读（an apple→anapple）和弱读（to读成tə）。推荐YouTube频道"Rachel\'s English"，专门讲美式发音。', tags: ['发音', '连读'], target: 'english', targetName: '英语' },
+      { id: 'kw61', cat: '英语学习', title: '商务英语邮件万能模板', desc: '开头：Hope this email finds you well. 正文：I\'m writing to.../Just checking in on... 结尾：Looking forward to hearing from you. 附常用：FYI(供参考)、ASAP(尽快)。', tags: ['商务', '邮件'], target: 'english', targetName: '英语' },
+      { id: 'kw62', cat: '英语学习', title: '用AI练口语—— 随时随地对话', desc: 'ChatGPT语音模式、豆包AI、Pi.ai都可免费练口语。设定角色（如"你是一家咖啡店的店员"），沉浸式对话。比找真人语伴更方便。', tags: ['AI', '口语'], target: 'english', targetName: '英语' },
       // ===== 理财投资 =====
       { id: 'kw36', cat: '理财投资', title: '基金定投实操指南', desc: '①开户：支付宝/天天基金 ②选基：沪深300ETF联接（费率低）③设置：每月10号自动扣款 ④金额：月收入10-20% ⑤纪律：坚持3年以上，不要中途停止。', tags: ['定投', '实操'], target: 'finance', targetName: '财经' },
       { id: 'kw37', cat: '理财投资', title: '可转债打新全流程', desc: '①开通证券账户 ②每日查看"可转债申购日历" ③点击申购（顶格申购）④T+2公布中签 ⑤缴款1000元 ⑥上市首日卖出（通常盈利100-300元）。', tags: ['打新债', '实操'], target: 'finance', targetName: '财经' },
@@ -2321,6 +2326,10 @@ const Views = {
       { id: 'kw39', cat: '理财投资', title: '省钱不降生活品质的5个技巧', desc: '①取消不用的订阅会员 ②大额消费等24小时再决定 ③买品质好耐用的而非便宜的 ④自己做饭代替外卖 ⑤用信用卡积分换购。每月可省1000-3000元。', tags: ['省钱', '技巧'], target: 'finance', targetName: '财经' },
       { id: 'kw40', cat: '理财投资', title: '银行卡的正确使用姿势', desc: '①工资卡只进不出→自动转入理财 ②消费卡每月转入预算 ③储蓄卡只存不取。三卡分离，花钱有数。', tags: ['银行卡', '管理'], target: 'finance', targetName: '财经' },
       { id: 'kw41', cat: '理财投资', title: '消费降级 vs 消费升级', desc: '降级：减少频次（外卖→做饭）。升级：买贵但耐用的（快时尚→经典款）。聪明的消费=在"高频使用"上花钱，在"低频冲动"上省钱。', tags: ['消费观', '降级'], target: 'finance', targetName: '财经' },
+      { id: 'kw63', cat: '理财投资', title: '指数估值怎么看—— 低估才是买入时机', desc: '看PE/PB历史分位：<30%分位=低估（可加仓），30-70%=合理（持有），>70%=高估（减仓）。支付宝"指数红绿灯"和蛋卷基金"估值排行"都有免费数据。', tags: ['估值', '指数'], target: 'finance', targetName: '财经' },
+      { id: 'kw64', cat: '理财投资', title: '股债平衡策略—— 最简单的资产配置', desc: '50%股票基金+50%债券基金，每半年调整一次。股票涨了卖掉补债券，债券涨了卖掉补股票。长期年化6-8%，最大回撤仅10-15%。', tags: ['股债平衡', '配置'], target: 'finance', targetName: '财经' },
+      { id: 'kw65', cat: '理财投资', title: '打新股—— A股最稳的"抽奖"', desc: '持有一定市值的股票→获得打新额度→申购新股→中签缴款→上市卖出。虽然中签率极低（万分之几），但中了就是赚。需要开通科创板/创业板权限。', tags: ['打新', '股票'], target: 'finance', targetName: '财经' },
+      { id: 'kw66', cat: '理财投资', title: '黄金的3种投资方式', desc: '①实物黄金（金条/金币）：最传统，有保管成本 ②黄金ETF（如518880）：股票账户直接买，最方便 ③积存金（支付宝/银行）：定投模式，积少成多。', tags: ['黄金', '投资'], target: 'finance', targetName: '财经' },
       // ===== 效率工具 =====
       { id: 'kw42', cat: '效率工具', title: '番茄工作法实操', desc: '①设25分钟倒计时→专注一件事 ②铃响休息5分钟 ③每4个番茄钟休息15-30分钟。工具：Forest App（种树）、番茄ToDo。每天8个番茄钟=高效4小时。', tags: ['番茄钟', '专注'], target: 'memos', targetName: '备忘录' },
       { id: 'kw43', cat: '效率工具', title: 'Notion搭建个人知识库', desc: '①创建Database ②设置属性：分类、标签、日期、状态 ③用不同视图：表格/看板/日历 ④模板化重复内容。推荐从PARA笔记法开始。', tags: ['Notion', '知识管理'], target: 'memos', targetName: '备忘录' },
@@ -2329,22 +2338,104 @@ const Views = {
       { id: 'kw46', cat: '效率工具', title: '两分钟法则—— 告别拖延症', desc: '如果一件事2分钟内能做完→立刻做。不要放进待办清单。回复消息、整理桌面、倒垃圾……立刻搞定，不给拖延留机会。', tags: ['两分钟', '拖延'], target: 'memos', targetName: '备忘录' },
       { id: 'kw47', cat: '效率工具', title: '深度工作的4个条件', desc: '①固定时间段（如每天9-12点）②关闭所有通知③单任务（不做多线程）④设定明确产出目标。每天3小时深度工作>8小时浅层工作。', tags: ['深度工作', '专注'], target: 'memos', targetName: '备忘录' },
       { id: 'kw48', cat: '效率工具', title: '周计划的"3-3-3法则"', desc: '每周设定：3件最重要的事（必须完成）+3件次要的事（尽量完成）+3件维护的事（习惯打卡）。聚焦，不要贪多。', tags: ['周计划', '聚焦'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw67', cat: '效率工具', title: '浏览器插件效率包', desc: '必装插件：①OneTab（标签页管理，省内存）②uBlock Origin（去广告）③Grammarly（英语写作纠错）④Dark Reader（夜间模式）。装完生产力翻倍。', tags: ['插件', '浏览器'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw68', cat: '效率工具', title: 'AI工具提效指南（2025版）', desc: '写作→Claude/ChatGPT；做PPT→Gamma.ai；画图→Midjourney/DALL·E；会议纪要→飞书妙记/通义听悟；代码→GitHub Copilot。用对工具，一天省2小时。', tags: ['AI', '工具'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw69', cat: '效率工具', title: '文件命名规范—— 告别"新建文件夹"', desc: '格式：[日期]_[项目]_[版本]。如"20260728_知识库改造_v2"。好处：①按名称排序=按时间排序 ②一眼知道是什么 ③找文件快10倍。', tags: ['文件管理', '命名'], target: 'memos', targetName: '备忘录' },
       // ===== 个人成长 =====
       { id: 'kw49', cat: '个人成长', title: '费曼学习法—— 最好的学习方式是"教"', desc: '①选一个概念→②用最简单的语言讲给一个外行听→③讲不清楚的地方就是没真懂→④回去重新学→⑤简化类比直到能讲明白。', tags: ['费曼', '学习方法'], target: 'memos', targetName: '备忘录' },
       { id: 'kw50', cat: '个人成长', title: '微习惯—— 小到不可能失败', desc: '想健身→"每天1个俯卧撑"；想读书→"每天读1页"；想写作→"每天写50字"。关键是"开始"，一旦开始通常会超额完成。', tags: ['微习惯', '自律'], target: 'memos', targetName: '备忘录' },
       { id: 'kw51', cat: '个人成长', title: '刻意练习的4个要素', desc: '①明确目标（不是"练琴"而是"练好这首曲子的第3小节"）②极度专注③即时反馈④走出舒适区。1万小时不是关键，刻意练习才是。', tags: ['刻意练习', '技能'], target: 'memos', targetName: '备忘录' },
       { id: 'kw52', cat: '个人成长', title: '打造你的"第二大脑"', desc: '用笔记工具（Notion/飞书/Obsidian）建立外脑系统：①遇到好内容→剪藏②定期整理→分类+标签③关联→把孤立的笔记连成网④输出→变成你的知识。', tags: ['第二大脑', '笔记'], target: 'memos', targetName: '备忘录' },
       { id: 'kw53', cat: '个人成长', title: '晨间惯例（Morning Routine）', desc: '成功人士的共性：有固定的早晨流程。模板：①起床不碰手机→②喝一杯水→③10分钟冥想/拉伸→④写下今天最重要的1件事→⑤开始深度工作。', tags: ['晨间', '习惯'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw70', cat: '个人成长', title: '21天习惯养成法—— 科学版', desc: '21天是"适应期"不是"定型期"。真正确立习惯需要66天（伦敦大学研究）。方法：①前21天每天打卡 ②22-66天降低频率但保持 ③66天后检查是否内化。', tags: ['习惯', '21天'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw71', cat: '个人成长', title: '目标设定的SMART原则', desc: 'Specific(具体的)、Measurable(可衡量的)、Achievable(可达成的)、Relevant(相关的)、Time-bound(有时限的)。"我要变强"→"3个月内每周健身3次，深蹲达到50kg"。', tags: ['SMART', '目标'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw72', cat: '个人成长', title: '艾森豪威尔矩阵—— 时间管理的终极工具', desc: '四象限：①重要+紧急→马上做 ②重要+不紧急→安排时间做 ③不重要+紧急→委托别人 ④不重要+不紧急→删掉。每天80%时间应在②象限。', tags: ['时间管理', '四象限'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw73', cat: '个人成长', title: '精力管理 > 时间管理', desc: '时间是公平的，精力不是。高效能人士的秘密：①把最难的事放在精力巅峰做 ②每90分钟休息15分钟 ③运动+睡眠=精力基石 ④少做决策（扎克伯格天天穿灰T恤）。', tags: ['精力管理', '高效'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw74', cat: '个人成长', title: '冥想入门—— 5分钟改变一天', desc: '①找个安静地方坐下 ②闭眼，专注呼吸 ③走神了没关系，轻轻拉回来 ④从5分钟开始。研究证明：每天冥想8周，焦虑降低30%，专注力提升20%。App推荐：潮汐、Headspace。', tags: ['冥想', '减压'], target: 'memos', targetName: '备忘录' },
       // ===== 沟通表达 =====
       { id: 'kw54', cat: '沟通表达', title: 'PREP沟通法—— 把话说清楚', desc: 'Point(观点)→Reason(理由)→Example(例子)→Point(重申观点)。如："我觉得这个方案可行(P)，因为成本低效果好(R)，比如上次...(E)，所以建议采用(P)。"', tags: ['PREP', '表达'], target: 'copywritingItems', targetName: '文案表达' },
       { id: 'kw55', cat: '沟通表达', title: '非暴力沟通四步法', desc: '①观察（说事实不说评价）②感受（说感受不说想法）③需要（说需要不说指责）④请求（说请求不说命令）。"你总是迟到"→"你这周迟到了3次，我有些担心..."', tags: ['非暴力沟通', '人际关系'], target: 'memos', targetName: '备忘录' },
       { id: 'kw56', cat: '沟通表达', title: '电梯演讲—— 30秒说清你是谁', desc: '格式：我是[名字]，我帮[谁]解决[什么问题]，方法是[怎么做的]，跟别人不一样的是[独特优势]。30秒内让人记住你。', tags: ['电梯演讲', '自我介绍'], target: 'copywritingItems', targetName: '文案表达' },
       { id: 'kw57', cat: '沟通表达', title: '即兴发言的3点法', desc: '突然被点名发言？用3点法：①先说"我有三点想法"②想到什么说什么（人们只记得你有三点）③最后总结"所以我认为..."。3这个数字有魔力。', tags: ['即兴发言', '表达'], target: 'copywritingItems', targetName: '文案表达' },
+      { id: 'kw75', cat: '沟通表达', title: '倾听的5个层次—— 最高级的沟通是"听"', desc: '①忽视（根本没在听）②假装听（嗯嗯哦哦）③选择性听（只听想听的）④专注听（理解对方）⑤同理心听（感受对方的情绪）。大多数人在①-③，高手在⑤。', tags: ['倾听', '同理心'], target: 'memos', targetName: '备忘录' },
+      { id: 'kw76', cat: '沟通表达', title: '说服力三要素：Ethos/Pathos/Logos', desc: '亚里士多德的说服三要素：①Ethos(人格魅力)：你靠谱吗？②Pathos(情感)：你打动我了吗？③Logos(逻辑)：你有道理吗？好说服=三者结合。', tags: ['说服力', '沟通'], target: 'copywritingItems', targetName: '文案表达' },
+      { id: 'kw77', cat: '沟通表达', title: '会议发言的STAR法则', desc: 'Situation(背景)→Task(任务)→Action(行动)→Result(结果)。"上季度用户流失(S)，我负责挽回(T)，通过定向优惠(A)，留存率提升了15%(R)"。', tags: ['会议', '发言'], target: 'copywritingItems', targetName: '文案表达' },
+      { id: 'kw78', cat: '沟通表达', title: '批评的艺术：三明治法则', desc: '①先肯定（"你这篇文案选题很好"）②提出建议（"结构可以再紧凑一些"）③再鼓励（"以你的能力，改完一定会更好"）。让人舒服地接受意见。', tags: ['反馈', '批评'], target: 'copywritingItems', targetName: '文案表达' },
     ];
 
     // 合并用户自定义知识
     const userKnowledge = Store.getUserKnowledge();
     const allKnowledge = [...knowledgeDB, ...userKnowledge];
+
+    // ===== 智能每日推荐 =====
+    const dailyResult = Store.getDailyKnowledge('general', allKnowledge, 5);
+    const progress = Store.getKnowledgeProgress('general', allKnowledge);
+
+    // 进度条
+    const progressBar = document.createElement('div');
+    progressBar.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--text-muted);padding:0 4px;';
+    progressBar.innerHTML = `
+      <span>📖 学习进度</span>
+      <div style="flex:1;height:6px;background:var(--bg-soft);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${progress.percent}%;background:var(--primary);border-radius:3px;transition:width 0.3s;"></div>
+      </div>
+      <span>${progress.read}/${progress.total} (${progress.percent}%)</span>
+    `;
+    container.appendChild(progressBar);
+
+    // 全部读完提示
+    if (progress.read >= progress.total && progress.total > 0) {
+      const doneTip = document.createElement('div');
+      doneTip.style.cssText = 'text-align:center;padding:8px 12px;margin-bottom:10px;color:var(--text-muted);font-size:13px;background:var(--bg-soft);border-radius:8px;';
+      doneTip.innerHTML = '🎉 全部学完！<button class="btn btn-sm" style="margin-left:8px;">重新开始</button>';
+      doneTip.querySelector('button').onclick = () => {
+        Store.resetKnowledgeProgress('general');
+        Views.render('knowledge');
+      };
+      container.appendChild(doneTip);
+    }
+
+    // 今日推荐标题
+    const dailyTitle = document.createElement('div');
+    dailyTitle.className = 'section-title';
+    dailyTitle.style.marginTop = '4px';
+    dailyTitle.innerHTML = `📌 今日推荐 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">— 不重复推荐 · 第${dailyResult.cycle+1}轮</span>`;
+    container.appendChild(dailyTitle);
+
+    // 今日推荐卡片
+    if (dailyResult.items.length > 0) {
+      const dailyWrap = document.createElement('div');
+      dailyWrap.className = 'knowledge-list';
+      dailyWrap.style.marginBottom = '16px';
+      dailyResult.items.forEach(item => {
+        const isUser = item.id && item.id.startsWith('uk');
+        const card = document.createElement('div');
+        card.className = 'knowledge-card';
+        card.style.cssText = 'border-left:3px solid var(--primary);';
+        card.innerHTML = `
+          <div class="knowledge-card-header">
+            <span class="knowledge-card-cat">${this.escape(item.cat)}</span>
+            <span style="font-size:10px;color:var(--primary);font-weight:600;">⭐ 今日推荐</span>
+            ${isUser ? '<span style="font-size:10px;color:var(--primary);margin-left:auto;">我的</span>' : ''}
+          </div>
+          <div class="knowledge-card-title">${this.escape(item.title)}</div>
+          <div class="knowledge-card-desc">${this.escape(item.desc)}</div>
+          <div class="knowledge-card-footer">
+            <div class="knowledge-card-tags">
+              ${(item.tags || []).map(t => `<span class="knowledge-card-tag">${this.escape(t)}</span>`).join('')}
+            </div>
+          </div>
+        `;
+        dailyWrap.appendChild(card);
+      });
+      container.appendChild(dailyWrap);
+    }
+
+    // 分隔
+    const divider = document.createElement('div');
+    divider.style.cssText = 'font-size:13px;font-weight:600;color:var(--text-muted);margin:8px 0 4px 0;';
+    divider.textContent = '📚 全部知识库';
+    container.appendChild(divider);
 
     // 分类筛选
     const cats = [...new Set(allKnowledge.map(k => k.cat))];
