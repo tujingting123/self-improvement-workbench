@@ -105,12 +105,25 @@ const Store = {
     } else {
       this.data = this.defaults();
     }
+    // v38 修复：清除旧格式的知识库 tracker（没有 todayIds 字段的）
+    this.migrateKnowledgeTracker();
     this.updateStreak();
     // 清理已废弃的雅思备考任务
     this.cleanupLegacyData();
     // 英语每日归档（0点清空，历史保留）
     this.archiveDailyEnglish();
     return this.data;
+  },
+
+  // v38: 清除旧格式知识库 tracker（没有 todayIds 字段会导致推荐空白）
+  migrateKnowledgeTracker() {
+    ['financeKnowledgeRead', 'generalKnowledgeRead'].forEach(k => {
+      const t = this.data[k];
+      if (t && t.date && !t.hasOwnProperty('todayIds')) {
+        delete this.data[k];
+      }
+    });
+    this.save();
   },
 
   // 英语每日归档：将前一天的内容归档到历史，清空当日
