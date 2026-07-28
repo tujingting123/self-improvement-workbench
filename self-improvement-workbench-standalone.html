@@ -5,6 +5,20 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <!-- v48: 强制缓存清除 -->
+  <script>
+    // 强制清除旧版本缓存，确保加载最新 JS
+    (function() {
+      var v = localStorage.getItem('_app_version');
+      if (v !== 'v48') {
+        localStorage.setItem('_app_version', 'v48');
+        // 强制刷新页面以清除浏览器缓存
+        if (v && v !== 'v48') {
+          location.reload(true);
+        }
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,7 +27,6 @@
   <meta name="description" content="身材管理、英语学习、阅读记录、AI学习、财经资讯、穿搭灵感、日记备忘、灵感集、技能提升">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <title>自我提升工作台</title>
-  <!-- v47: 修复培训菜单renderTraining调用getDailyKnowledge时readIds为undefined导致页面空白 -->
   <style>
 /* ===== 设计变量 - 粉色系 ===== */
 :root {

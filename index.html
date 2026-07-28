@@ -5,6 +5,20 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <!-- v48: 强制缓存清除 -->
+  <script>
+    // 强制清除旧版本缓存，确保加载最新 JS
+    (function() {
+      var v = localStorage.getItem('_app_version');
+      if (v !== 'v48') {
+        localStorage.setItem('_app_version', 'v48');
+        // 强制刷新页面以清除浏览器缓存
+        if (v && v !== 'v48') {
+          location.reload(true);
+        }
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -74,8 +88,8 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="./assets/store.js?v=47"></script>
-  <script src="./assets/views.js?v=47"></script>
-  <script src="./assets/app.js?v=47"></script>
+  <script src="./assets/store.js?v=48"></script>
+  <script src="./assets/views.js?v=48"></script>
+  <script src="./assets/app.js?v=48"></script>
 </body>
 </html>
