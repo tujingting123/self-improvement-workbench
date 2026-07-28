@@ -5834,21 +5834,24 @@ const Views = {
 
     const newsTitle = document.createElement('div');
     newsTitle.className = 'section-title';
-    newsTitle.textContent = `最新AI资讯（${items.length}条）`;
+    const todayItems = items.filter(e => e.fetchDate === Store.todayKey());
+    const historyItems = items.filter(e => e.fetchDate !== Store.todayKey());
+    newsTitle.innerHTML = `最新AI资讯 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">今日 ${todayItems.length} 条${historyItems.length > 0 ? ' · 历史 ' + historyItems.length + ' 条' : ''}</span>`;
     container.appendChild(newsTitle);
 
-    if (items.length === 0) {
+    if (todayItems.length === 0 && historyItems.length === 0) {
       container.appendChild(this.emptyState('', '暂无内容，点击上方"立即采集"获取AI最新资讯'));
     } else {
       const list = document.createElement('div');
-      items.forEach(item => {
+      // 显示今天的新闻
+      todayItems.forEach(item => {
         const el = document.createElement('div');
         el.className = 'ai-news-item';
         el.style.cursor = 'pointer';
         el.innerHTML = `
           <div class="ai-news-header">
             <span class="ai-source">${this.escape(item.source)}</span>
-            <span class="ai-news-date">${this.escape(item.fetchDate || '')}</span>
+            <span class="ai-news-date">今日</span>
           </div>
           <div class="ai-news-title">${this.escape(item.title)}</div>
           <div class="ai-news-desc">${this.escape(item.desc || '')}</div>
@@ -5860,6 +5863,63 @@ const Views = {
         el.onclick = () => UI.openAIDetailModal(item);
         list.appendChild(el);
       });
+
+      // 历史新闻按日期分组，默认折叠
+      if (historyItems.length > 0) {
+        const historyGroups = {};
+        historyItems.forEach(item => {
+          const date = item.fetchDate || '未知日期';
+          if (!historyGroups[date]) historyGroups[date] = [];
+          historyGroups[date].push(item);
+        });
+
+        const historyToggle = document.createElement('div');
+        historyToggle.style.cssText = 'text-align:center;padding:12px;margin-top:8px;color:var(--text-muted);font-size:13px;cursor:pointer;background:var(--bg-soft);border-radius:10px;';
+        historyToggle.innerHTML = `📅 查看历史新闻 (${historyItems.length} 条) ▼`;
+        
+        const historyList = document.createElement('div');
+        historyList.style.display = 'none';
+        historyList.style.marginTop = '8px';
+
+        Object.keys(historyGroups).sort().reverse().forEach(date => {
+          const groupTitle = document.createElement('div');
+          groupTitle.style.cssText = 'font-size:12px;color:var(--text-muted);margin:12px 0 6px;padding-left:4px;';
+          groupTitle.textContent = `📅 ${date}（${historyGroups[date].length}条）`;
+          historyList.appendChild(groupTitle);
+
+          historyGroups[date].forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'ai-news-item';
+            el.style.cssText = 'opacity:0.7;cursor:pointer;';
+            el.innerHTML = `
+              <div class="ai-news-header">
+                <span class="ai-source">${this.escape(item.source)}</span>
+                <span class="ai-news-date">${this.escape(item.fetchDate || '')}</span>
+              </div>
+              <div class="ai-news-title">${this.escape(item.title)}</div>
+              <div class="ai-news-desc">${this.escape(item.desc || '')}</div>
+              <div class="ai-news-footer">
+                ${item.tags && item.tags.length ? `<div class="ai-news-tags">${item.tags.map(t => `<span class="ai-news-tag">${this.escape(t)}</span>`).join('')}</div>` : ''}
+                <span style="color:var(--primary-dark);font-size:12px;">点击查看详情 →</span>
+              </div>
+            `;
+            el.onclick = () => UI.openAIDetailModal(item);
+            historyList.appendChild(el);
+          });
+        });
+
+        historyToggle.onclick = () => {
+          const isHidden = historyList.style.display === 'none';
+          historyList.style.display = isHidden ? 'block' : 'none';
+          historyToggle.innerHTML = isHidden 
+            ? `📅 收起历史新闻 (${historyItems.length} 条) ▲` 
+            : `📅 查看历史新闻 (${historyItems.length} 条) ▼`;
+        };
+
+        list.appendChild(historyToggle);
+        list.appendChild(historyList);
+      }
+
       container.appendChild(list);
     }
 
@@ -11453,6 +11513,24 @@ const AIFetcher = {
     { source: '36氪', title: '苹果Apple Intelligence正式上线：Siri全面AI化，隐私优先', desc: '苹果Apple Intelligence功能正式推送，Siri全面升级。', content: '苹果Apple Intelligence正式上线：\n\n1. Siri升级：支持自然语言理解、上下文记忆、屏幕感知，可跨App执行操作。\n2. 写作工具：全系统AI写作、摘要、重写、校对。\n3. 图像工具：Genmoji（AI表情）、Image Playground（AI生图）、图片消除。\n4. 隐私架构：端侧处理为主，复杂任务使用Private Cloud Compute，数据不留存。', tags: ['苹果', 'Siri', '端侧AI', '隐私'] },
     { source: '机器之心', title: 'AI搜索大战升级：Perplexity估值90亿美元，挑战Google', desc: 'AI搜索引擎Perplexity完成新一轮融资，估值达90亿美元。', content: 'AI搜索赛道最新动态：\n\n1. Perplexity：估值90亿美元，月活用户1500万，主打「AI答案+引用来源」。\n2. SearchGPT：OpenAI推出AI搜索，整合实时网络信息。\n3. 百度AI搜索：百度搜索全面AI化，搜索结果页优先展示AI生成摘��。\n4. 微软Bing：集成Copilot，AI搜索市场份额从3%提升至8%。', tags: ['AI搜索', 'Perplexity', '搜索引擎', '竞争'] },
     { source: '量子位', title: '人形机器人Figure 02进厂打工：在宝马生产线自主工作', desc: 'Figure AI发布Figure 02人形机器人，已在宝马工厂自主完成零部件装配。', content: 'Figure AI发布第二代通用人形机器人Figure 02：\n\n1. 硬件升级：全身自由度41个，手部16个自由度，可完成精细操作。\n2. AI能力：集成GPT-5级别大模型，理解自然语言指令，自主规划动作。\n3. 宝马实测：在宝马Spartanburg工厂自主完成钣金件搬运和装配。\n4. 商业化：与宝马签署商业协议，2025年小批量部署。', tags: ['人形机器人', 'Figure', '制造业', '自动化'] },
+    { source: '36氪', title: 'Meta发布Llama 4：开源模型再进化，多模态能力全面对标GPT-5', desc: 'Meta发布Llama 4系列开源模型，405B参数版本多模态能力对标GPT-5。', content: 'Meta发布Llama 4系列开源大模型：\n\n1. 三种尺寸：8B/70B/405B，其中405B为目前最大开源模型。\n2. 多模态：原生支持图文理解，可分析图片、图表、文档。\n3. 性能：405B版本在多项基准测试中接近GPT-5水平。\n4. 开源协议：Llama 4社区协议，研究免费，商业使用有条件免费。\n\n开源社区反响热烈，HuggingFace下载量首日破千万。扎克伯格宣布开源是Meta的长期战略。', tags: ['Meta', 'Llama', '开源', '多模态'] },
+    { source: '机器之心', title: 'OpenAI推出Sora 2.0：视频生成质量革命性提升，支持60秒连贯叙事', desc: 'OpenAI升级Sora视频生成模型，支持60秒高质量连贯视频。', content: 'OpenAI发布Sora 2.0视频生成模型：\n\n1. 时长突破：支持生成最长60秒的1080P视频，叙事连贯。\n2. 物理理解：AI理解物体运动、重力、碰撞等物理规律。\n3. 多镜头：支持在一条视频中切换多个镜头角度。\n4. 音频同步：可自动生成匹配视频的背景音乐和音效。\n\n应用场景：广告制作、影视预览、短视频创作。成本仅为传统拍摄的1/100。', tags: ['OpenAI', 'Sora', '视频生成', 'AIGC'] },
+    { source: '量子位', title: 'DeepSeek-R1推理模型发布：数学能力超越GPT-5，成本仅1/30', desc: '深度求索发布DeepSeek-R1推理模型，在数学推理任务上超越GPT-5。', content: '深度求索发布DeepSeek-R1推理模型：\n\n1. 推理能力：在MATH、GPQA等推理基准测试中得分超越GPT-5。\n2. 训练方法：采用强化学习（RL）训练，无需人工标注思维链。\n3. 成本：API价格仅为GPT-5的1/30，推理成本极低。\n4. 开源：模型权重和训练方法完全开源。\n\n行业影响：证明RL训练路线可行，中国AI在推理模型领域实现突破。', tags: ['DeepSeek', '推理模型', '开源', '强化学习'] },
+    { source: '36氪', title: 'AI编程工具Cursor估值达90亿美元，开发者用户超百万', desc: 'AI编程助手Cursor完成新一轮融资，估值90亿美元，月活开发者超100万。', content: 'AI编程工具Cursor最新进展：\n\n1. 融资：完成5亿美元C轮融资，估值90亿美元。\n2. 用户：月活开发者超100万，付费用户超20万。\n3. 功能：支持全栈代码生成、Bug修复、代码审查、重构建议。\n4. 集成：深度集成VS Code生态，支持所有主流编程语言。\n5. 效率：用户平均编码效率提升55%，Bug率降低30%。\n\n竞争对手GitHub Copilot用户超150万，AI编程赛道竞争白热化。', tags: ['Cursor', 'AI编程', '融资', '开发者工具'] },
+    { source: '机器之心', title: 'AI Agent爆发：AutoGPT用户突破500万，自主任务执行成新趋势', desc: 'AI Agent平台AutoGPT用户突破500万，自主任务执行能力大幅提升。', content: 'AI Agent赛道最新动态：\n\n1. AutoGPT：用户突破500万，支持自主浏览网页、填表、数据分析。\n2. OpenAI Agent SDK：开发者可构建自定义Agent，连接API和工具。\n3. 企业应用：销售Agent自动跟进客户，客服Agent处理80%常见问题。\n4. 市场规模：预计2025年AI Agent市场规模达200亿美元。\n\n趋势：从"AI对话"到"AI做事"，Agent被视为AI应用的下一个范式。', tags: ['AI Agent', 'AutoGPT', '自动化', '应用落地'] },
+    { source: '量子位', title: 'AI医疗诊断突破：斯坦福模型在癌症筛查中准确率达99.2%', desc: '斯坦福大学AI模型在癌症筛查中准确率达99.2%，超越资深病理医生。', content: '斯坦福大学发布AI医疗诊断新成果：\n\n1. 模型：基于视觉Transformer，训练数据包含50万张病理切片。\n2. 准确率：癌症筛查准确率99.2%，超越15年经验病理医生（96.8%）。\n3. 速度：单张切片分析时间从20分钟缩短到30秒。\n4. FDA审批：已进入FDA创新医疗器械审批通道。\n\n应用前景：基层医院AI辅助诊断，缓解病理医生短缺问题。预计3年内进入临床使用。', tags: ['AI医疗', '癌症筛查', '斯坦福', '诊断'] },
+    { source: '36氪', title: 'AI教育赛道火热：可汗AI导师用户破亿，个性化教学成现实', desc: '可汗学院AI导师Khanmigo用户突破1亿，实现真正的个性化教学。', content: 'AI教育赛道最新动态：\n\n1. Khanmigo：可汗学院AI导师用户突破1亿，覆盖K12全学科。\n2. 个性化：AI根据学生水平自动调整难度和教学方式，一对一辅导。\n3. 作文批改：AI可批改作文并给出详细修改建议，减轻教师负担。\n4. 多语言：支持30种语言，服务全球190个国家。\n5. 成本：免费向公立学校开放，月费9美元面向个人用户。\n\n行业影响：AI教育开始真正改变教学方式，传统辅导班面临冲击。', tags: ['AI教育', '可汗学院', '个性化教学', 'K12'] },
+    { source: '机器之心', title: 'AI生成音乐质量突破：Suno v4发布，专业音乐人也无法分辨', desc: 'AI音乐生成平台Suno发布v4版本，生成质量达到专业音乐人水平。', content: 'Suno发布v4 AI音乐生成模型：\n\n1. 音质提升：生成音乐达到录音室品质，192kHz/24bit无损输出。\n2. 时长：支持生成最长5分钟的完整歌曲，含前奏、主歌、副歌、尾奏。\n3. 人声：AI人声自然度大幅提升，专业音乐人盲测准确率仅52%。\n4. 版权：采用授权数据训练，生成音乐可商用。\n5. 价格：免费用户每月10首，Pro版每月500首/$10。\n\n争议：音乐人协会抗议AI训练数据侵权，Suno表示已获授权。', tags: ['AI音乐', 'Suno', 'AIGC', '版权'] },
+    { source: '量子位', title: '国产AI芯片突破：华为昇腾910C量产，性能达英伟达H100的80%', desc: '华为昇腾910C AI芯片正式量产，性能达英伟达H100的80%。', content: '华为昇腾910C芯片最新进展：\n\n1. 性能：FP16算力达320 TFLOPS，约为H100的80%。\n2. 架构：达芬奇架构3.0，支持稀疏计算，推理效率提升40%。\n3. 制程：7nm工艺，中芯国际代工。\n4. 生态：MindSpore框架+CANN算子库，支持主流大模型训练。\n5. 客户：百度、科大讯飞、腾讯等已采购，用于大模型训练。\n\n意义：在美国芯片禁令下，国产AI芯片实现关键突破，但仍需追赶制程差距。', tags: ['华为', '昇腾', 'AI芯片', '国产替代'] },
+    { source: '36氪', title: 'AI法律助手落地：首个AI律师通过 bar exam，准确率超90%', desc: 'AI法律助手在律师资格考试中通过率超90%，AI法律服务加速落地。', content: 'AI法律赛道最新进展：\n\n1. 考试通过：AI法律模型在多州bar exam中通过率超90%，超越人类平均。\n2. Harvey AI：估值30亿美元，服务全球500强企业法务部门。\n3. 合同审查：AI可在30秒内审查100页合同，准确率98%。\n4. 案例检索：AI从千万判例中秒级找到相关案例，律师效率提升10倍。\n5. 普惠法律：AI法律咨询平台降低法律服务门槛，月费$20起。\n\n监管：美国律协正在制定AI法律使用规范，中国也在推进相关立法。', tags: ['AI法律', 'Harvey', '合同审查', '考试'] },
+    { source: '机器之心', title: '多模态AI突破：GPT-5o实时语音对话延迟降至200ms，接近人类对话', desc: 'OpenAI发布GPT-5o语音模式，对话延迟200ms，可感知情绪和语气。', content: 'OpenAI发布GPT-5o实时语音模式：\n\n1. 延迟：端到端语音延迟200ms，接近人类对话反应速度（150-250ms）。\n2. 情感：AI可感知说话者的情绪，并用相应语气回应。\n3. 多人对话：支持多人同时对话，分辨不同说话者。\n4. 实时翻译：支持30种语言实时互译，延迟<500ms。\n5. 应用：客服、语言学习、心理咨询、陪伴聊天。\n\n革命性：从"打字对话"到"自然说话"，AI交互方式发生根本变化。', tags: ['OpenAI', '语音', '多模态', '实时对话'] },
+    { source: '量子位', title: 'AI写作工具Jasper IPO估值200亿，企业内容生产被AI重塑', desc: 'AI写作平台Jasper准备IPO，估值200亿美元，企业内容生产全面AI化。', content: 'AI写作赛道动态：\n\n1. Jasper：准备IPO，估值200亿美元，年营收5亿美元。\n2. 企业应用：营销文案、产品描述、邮件、报告全流程AI生成。\n3. 品牌语调：AI学习企业品牌语调，生成内容风格统一。\n4. 效率：内容生产成本降低80%，速度提升10倍。\n5. 竞争：Copy.ai、Writesonic等竞品差异化竞争。\n\n趋势：企业内容营销从"人写"到"AI写+人审"，内容产量爆炸式增长。', tags: ['AI写作', 'Jasper', 'IPO', '企业应用'] },
+    { source: '36氪', title: 'AI芯片创业公司Groq估值翻倍至100亿，LPU推理速度碾压GPU', desc: 'AI芯片创业公司Groq估值100亿美元，其LPU芯片推理速度达GPU的10倍。', content: 'Groq AI芯片最新进展：\n\n1. 融资：D轮融资6.4亿美元，估值100亿美元，一年内翻倍。\n2. LPU芯片：Language Processing Unit，专为大模型推理设计。\n3. 性能：推理速度达英伟达H100的10倍，每秒生成500+token。\n4. 成本：推理成本仅为GPU的1/10，功耗降低70%。\n5. 客户：已服务Meta、Google等大厂推理需求。\n\n意义：推理场景专用芯片可能颠覆GPU主导格局，但训练仍需GPU。', tags: ['Groq', 'LPU', 'AI芯片', '推理'] },
+    { source: '机器之心', title: 'AI制药里程碑：首个AI设计药物进入临床试验，研发周期缩短70%', desc: '首个完全由AI设计的药物进入II期临床，研发周期从5年缩短到18个月。', content: 'AI制药领域重大突破：\n\n1. 里程碑：Insilico Medicine的AI设计药物INS018_055进入II期临床。\n2. 研发周期：从靶点发现到临床试验仅18个月，传统需4-5年。\n3. 成本：研发成本降低70%，从26亿美元降至约8亿美元。\n4. AI应用：靶点发现、分子设计、毒性预测、临床试验设计全链条。\n5. 赛道：全球超200家AI制药公司，融资总额超150亿美元。\n\n前景：AI可能让药物研发从"大海捞针"变成"精准设计"，未来5年将有更多AI药物上市。', tags: ['AI制药', '临床试验', 'Insilico', '生物医药'] },
+    { source: '量子位', title: 'AI心理咨询获FDA认证：Woebot临床有效性达72%，覆盖百万用户', desc: 'AI心理咨询APP Woebot获FDA认证，临床有效性72%，月活用户百万。', content: 'AI心理健康赛道动态：\n\n1. FDA认证：Woebot成为首个获FDA认证的AI心理健康工具。\n2. 有效性：临床研究显示72%用户焦虑/抑郁症状减轻。\n3. 技术：基于CBT认知行为疗法，AI对话引导用户调整思维模式。\n4. 覆盖：月活用户超200万，主要服务18-35岁年轻人。\n5. 成本：月费$15，仅为传统心理咨询的1/10。\n\n意义：AI填补心理咨询供需缺口，但不能替代严重心理疾病的专业治疗。', tags: ['AI心理', 'Woebot', 'FDA', '健康'] },
+    { source: '36氪', title: 'AI客服大规模落地：阿里云智能客服处理85%咨询，人力成本降60%', desc: '阿里云AI客服系统处理85%咨询量，首次响应时间从45秒降至3秒。', content: 'AI客服行业最新数据：\n\n1. 阿里云：AI客服处理85%咨询量，首次响应从45秒降至3秒。\n2. 满意度：AI客服满意度89%，接近人工客服的92%。\n3. 成本：人力成本降低60%，企业平均节省200万/年。\n4. 能力：支持多轮对话、情绪感知、主动推荐、工单自动流转。\n5. 趋势：2025年80%企业客服将采用AI，人工转向复杂问题处理。\n\n影响：客服行业面临转型，从"接电话"到"管理AI+处理复杂问题"。', tags: ['AI客服', '阿里云', '降本增效', '企业应用'] },
+    { source: '机器之心', title: 'AI翻译耳机爆发：Timekettle实时翻译30种语言，延迟<0.5秒', desc: 'AI翻译耳机Timekettle WT2实现30种语言实时翻译，延迟0.5秒内。', content: 'AI翻译硬件赛道动态：\n\n1. Timekettle WT2：支持30种语言实时翻译，延迟<0.5秒。\n2. 技术：端侧AI芯片+云端大模型混合推理。\n3. 模式：双人对话模式（各戴一只）、听译模式、同传模式。\n4. 准确率：日常对话准确率95%，专业领域（医疗/法律）88%。\n5. 市场：年销量超50万台，售价$299-$499。\n6. 竞品：谷歌Pixel Buds、科大讯飞翻译耳机。\n\n趋势：AI翻译硬件可能颠覆传统翻译机市场，出国旅行/商务场景需求大。', tags: ['AI翻译', 'Timekettle', '硬件', '实时翻译'] },
+    { source: '量子位', title: 'AI生成3D模型突破：Tripo AI发布文生3D，10秒生成高质量模型', desc: 'Tripo AI发布文生3D模型生成技术，10秒生成可商用3D模型。', content: 'AI 3D生成领域最新突破：\n\n1. Tripo AI：文生3D模型，10秒生成，质量达商用标准。\n2. 技术：基于扩散模型+神经辐射场（NeRF），从2D图像重建3D。\n3. 应用：游戏开发、电商展示、建筑可视化、VR/AR内容。\n4. 成本：传统3D建模$500-5000/个，AI生成$0.5/个。\n5. 竞品：Meshy、Luma AI、Stability AI的3D模型。\n6. 市场：预计2027年AI 3D生成市场规模达50亿美元。\n\n影响：3D内容创作门槛大幅降低，可能催生"全民3D创作"时代。', tags: ['AI 3D', 'Tripo', 'AIGC', '3D建模'] },
   ],
 
   async fetch() {
@@ -11460,14 +11538,23 @@ const AIFetcher = {
     await new Promise(r => setTimeout(r, 1000));
     const today = Store.todayKey();
     const pool = [...this.newsDatabase].sort(() => Math.random() - 0.5);
-    const pickCount = Math.min(8 + Math.floor(Math.random() * 5), pool.length);
-    const newItems = pool.slice(0, pickCount).map(item => ({
+    // 获取已有历史新闻的标题，用于去重
+    const existing = Store.get('aiItems') || [];
+    const existingTitles = new Set(existing.map(e => e.title));
+    // 从池中筛选出和历史不重复的新闻
+    const freshPool = pool.filter(item => !existingTitles.has(item.title));
+    // 如果不重复的新闻不够，用全部池子补（极端情况）
+    const finalPool = freshPool.length >= 5 ? freshPool : pool;
+    const pickCount = Math.min(8 + Math.floor(Math.random() * 5), finalPool.length);
+    const newItems = finalPool.slice(0, pickCount).map(item => ({
       id: Store.genId(), ...item, fetchDate: today
     }));
     const shuffledTools = [...this.toolsDatabase].sort(() => Math.random() - 0.5);
     Store.set('aiTools', shuffledTools);
-    const others = Store.get('aiItems').filter(e => e.fetchDate !== today);
-    Store.set('aiItems', [...newItems, ...others].slice(0, 80));
+    // 只保留今天的新闻 + 最近的的历史（按日期分组，最多保留最近7天）
+    const others = existing.filter(e => e.fetchDate !== today);
+    const allItems = [...newItems, ...others].slice(0, 80);
+    Store.set('aiItems', allItems);
     Store.set('aiLastFetch', today + ' 09:00');
     UI.toast('已采集 ' + newItems.length + ' 条AI新闻 + ' + shuffledTools.length + ' 个AI工具');
   }

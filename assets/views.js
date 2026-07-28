@@ -1468,21 +1468,24 @@ const Views = {
 
     const newsTitle = document.createElement('div');
     newsTitle.className = 'section-title';
-    newsTitle.textContent = `最新AI资讯（${items.length}条）`;
+    const todayItems = items.filter(e => e.fetchDate === Store.todayKey());
+    const historyItems = items.filter(e => e.fetchDate !== Store.todayKey());
+    newsTitle.innerHTML = `最新AI资讯 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">今日 ${todayItems.length} 条${historyItems.length > 0 ? ' · 历史 ' + historyItems.length + ' 条' : ''}</span>`;
     container.appendChild(newsTitle);
 
-    if (items.length === 0) {
+    if (todayItems.length === 0 && historyItems.length === 0) {
       container.appendChild(this.emptyState('', '暂无内容，点击上方"立即采集"获取AI最新资讯'));
     } else {
       const list = document.createElement('div');
-      items.forEach(item => {
+      // 显示今天的新闻
+      todayItems.forEach(item => {
         const el = document.createElement('div');
         el.className = 'ai-news-item';
         el.style.cursor = 'pointer';
         el.innerHTML = `
           <div class="ai-news-header">
             <span class="ai-source">${this.escape(item.source)}</span>
-            <span class="ai-news-date">${this.escape(item.fetchDate || '')}</span>
+            <span class="ai-news-date">今日</span>
           </div>
           <div class="ai-news-title">${this.escape(item.title)}</div>
           <div class="ai-news-desc">${this.escape(item.desc || '')}</div>
@@ -1494,6 +1497,63 @@ const Views = {
         el.onclick = () => UI.openAIDetailModal(item);
         list.appendChild(el);
       });
+
+      // 历史新闻按日期分组，默认折叠
+      if (historyItems.length > 0) {
+        const historyGroups = {};
+        historyItems.forEach(item => {
+          const date = item.fetchDate || '未知日期';
+          if (!historyGroups[date]) historyGroups[date] = [];
+          historyGroups[date].push(item);
+        });
+
+        const historyToggle = document.createElement('div');
+        historyToggle.style.cssText = 'text-align:center;padding:12px;margin-top:8px;color:var(--text-muted);font-size:13px;cursor:pointer;background:var(--bg-soft);border-radius:10px;';
+        historyToggle.innerHTML = `📅 查看历史新闻 (${historyItems.length} 条) ▼`;
+        
+        const historyList = document.createElement('div');
+        historyList.style.display = 'none';
+        historyList.style.marginTop = '8px';
+
+        Object.keys(historyGroups).sort().reverse().forEach(date => {
+          const groupTitle = document.createElement('div');
+          groupTitle.style.cssText = 'font-size:12px;color:var(--text-muted);margin:12px 0 6px;padding-left:4px;';
+          groupTitle.textContent = `📅 ${date}（${historyGroups[date].length}条）`;
+          historyList.appendChild(groupTitle);
+
+          historyGroups[date].forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'ai-news-item';
+            el.style.cssText = 'opacity:0.7;cursor:pointer;';
+            el.innerHTML = `
+              <div class="ai-news-header">
+                <span class="ai-source">${this.escape(item.source)}</span>
+                <span class="ai-news-date">${this.escape(item.fetchDate || '')}</span>
+              </div>
+              <div class="ai-news-title">${this.escape(item.title)}</div>
+              <div class="ai-news-desc">${this.escape(item.desc || '')}</div>
+              <div class="ai-news-footer">
+                ${item.tags && item.tags.length ? `<div class="ai-news-tags">${item.tags.map(t => `<span class="ai-news-tag">${this.escape(t)}</span>`).join('')}</div>` : ''}
+                <span style="color:var(--primary-dark);font-size:12px;">点击查看详情 →</span>
+              </div>
+            `;
+            el.onclick = () => UI.openAIDetailModal(item);
+            historyList.appendChild(el);
+          });
+        });
+
+        historyToggle.onclick = () => {
+          const isHidden = historyList.style.display === 'none';
+          historyList.style.display = isHidden ? 'block' : 'none';
+          historyToggle.innerHTML = isHidden 
+            ? `📅 收起历史新闻 (${historyItems.length} 条) ▲` 
+            : `📅 查看历史新闻 (${historyItems.length} 条) ▼`;
+        };
+
+        list.appendChild(historyToggle);
+        list.appendChild(historyList);
+      }
+
       container.appendChild(list);
     }
 
