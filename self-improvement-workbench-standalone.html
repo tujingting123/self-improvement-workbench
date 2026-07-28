@@ -1157,6 +1157,13 @@ input, textarea, select {
   margin-bottom: 8px;
 }
 
+.fk-desc-collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .fk-tags {
   display: flex;
   gap: 4px;
@@ -3626,9 +3633,11 @@ const Store = {
       // 知识库已添加记录
       addedKnowledgeIds: [],
       // 知识库智能轮换 — 已读追踪 + 用户自定义知识
-      financeKnowledgeRead: {},   // { date: '2026-07-28', readIds: ['f0','f1',...], cycle: 1 }
+      financeKnowledgeRead: {},   // { date: '2026-07-28', readIds: ['f0','f1',...], todayIds: ['f0'], cycle: 1 }
       generalKnowledgeRead: {},   // 同上
       userKnowledge: [],          // 用户手动添加的知识 [{ id, cat, title, desc, tags, addDate }]
+      // 财经知识收藏
+      financeFavorites: [],       // [{ id, title, desc, detail, tags, addDate }]
       // 技能提升 - 文案表达
       copywritingItems: [],
       copywritingCategories: ['标题技巧', '金句收集', '故事结构', '营销文案', '演讲稿'],
@@ -4262,6 +4271,77 @@ const Store = {
   // 获取用户自定义知识
   getUserKnowledge() {
     return this.data.userKnowledge || [];
+  },
+
+  // ===== 财经知识收藏 =====
+  addFinanceFavorite(item) {
+    if (!this.data.financeFavorites) this.data.financeFavorites = [];
+    // 去重
+    if (this.data.financeFavorites.some(f => f.id === item.id)) return false;
+    this.data.financeFavorites.push({
+      id: item.id,
+      title: item.title,
+      desc: item.desc,
+      detail: item.detail || '',
+      tags: item.tags || [],
+      addDate: this.todayKey()
+    });
+    this.save();
+    return true;
+  },
+
+  removeFinanceFavorite(id) {
+    if (!this.data.financeFavorites) return;
+    this.data.financeFavorites = this.data.financeFavorites.filter(f => f.id !== id);
+    this.save();
+  },
+
+  getFinanceFavorites() {
+    return this.data.financeFavorites || [];
+  },
+
+  isFinanceFavorite(id) {
+    return (this.data.financeFavorites || []).some(f => f.id === id);
+  },
+
+  // 换一条财经知识（把当前这条标记为已读，选一条新的）
+  skipFinanceKnowledge(currentId, knowledgeDB) {
+    const key = 'financeKnowledgeRead';
+    let tracker = this.data[key] || {};
+    const today = this.todayKey();
+    
+    // 确保 tracker 有 todayIds
+    if (!tracker.todayIds) tracker.todayIds = [];
+    if (!tracker.readIds) tracker.readIds = [];
+    
+    // 把当前这条从 todayIds 移除，加入 readIds
+    tracker.todayIds = tracker.todayIds.filter(id => id !== currentId);
+    if (!tracker.readIds.includes(currentId)) {
+      tracker.readIds.push(currentId);
+    }
+    
+    // 从未读池选一条新的
+    const unread = knowledgeDB.filter(item => !tracker.readIds.includes(item.id) && !tracker.todayIds.includes(item.id));
+    
+    if (unread.length === 0) {
+      // 全部已读，重置
+      tracker.readIds = [];
+      tracker.todayIds = [];
+      tracker.cycle = (tracker.cycle || 0) + 1;
+      const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
+      const picked = shuffled[0];
+      tracker.todayIds = [picked.id];
+      this.data[key] = tracker;
+      this.save();
+      return picked;
+    }
+    
+    // 随机选一条未读的
+    const picked = unread[Math.floor(Math.random() * unread.length)];
+    tracker.todayIds = [picked.id];
+    this.data[key] = tracker;
+    this.save();
+    return picked;
   },
 
   // 数据导出
@@ -5907,78 +5987,153 @@ const Views = {
       { id: 'f52', title: '公积金使用技巧—— 这笔钱别闲着', desc: '公积金账户躺着只有1.5%活期利息。用来还房贷最划算（利率3.1% vs 商贷4.2%），或者提取交房租。别让它沉睡！', detail: '全国公积金账户里躺着超过8万亿，大部分在吃1.5%的低息。让你的公积金"活"起来。\n\n【公积金的三大用途】\n①还房贷（最划算！）\n• 公积金贷款利率：首套3.1%，二套3.575%\n• 商贷利率：约4.2%\n→ 100万贷款30年，用公积金比商贷省约18万利息\n\n②提取交房租\n• 无房职工可提取公积金交房租\n• 每季度或每年提取一次\n• 各地额度不同（如北京每月最高2000元）\n\n③大额提取\n• 买房、建房、翻修可一次性提取\n• 退休可一次性全部提取\n\n【组合贷技巧】\n公积金贷款有上限（各地不同，约50-120万）\n超过部分用商贷→"公积金+商贷"组合\n→ 最大限度利用低息公积金\n\n💡登录当地公积金App/小程序，查查你的余额。几万块躺着吃活期利息太浪费了！', tags: ['公积金', '房贷'] },
     ];
 
-    // 智能轮换：每日推荐5条，不重复
-    const result = Store.getDailyKnowledge('finance', knowledgeDB, 5);
-    const todayItems = result.items;
-    const progress = Store.getKnowledgeProgress('finance', knowledgeDB);
+    // 智能轮换：每日推荐1条，不重复
+    const result = Store.getDailyKnowledge('finance', knowledgeDB, 1);
+    let currentItem = result.items[0] || knowledgeDB[0];
 
     const section = document.createElement('div');
     section.className = 'section-title';
     section.style.marginTop = '4px';
-    section.innerHTML = `💰 理财知识学习 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">— 智能推荐 · 不重复 (第${result.cycle + 1}轮)</span>`;
+    section.innerHTML = `💰 今日理财推荐 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">每日自动更新 · 点击卡片展开全文</span>`;
     container.appendChild(section);
 
-    // 进度条
-    const progressBar = document.createElement('div');
-    progressBar.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:11px;color:var(--text-muted);';
-    progressBar.innerHTML = `
-      <span>📖 学习进度</span>
-      <div style="flex:1;height:6px;background:var(--bg-soft);border-radius:3px;overflow:hidden;">
-        <div style="height:100%;width:${progress.percent}%;background:var(--primary);border-radius:3px;transition:width 0.3s;"></div>
-      </div>
-      <span>${progress.read}/${progress.total} (${progress.percent}%)</span>
-    `;
-    container.appendChild(progressBar);
+    // ===== 大卡片容器 =====
+    const cardWrap = document.createElement('div');
+    cardWrap.style.marginBottom = '16px';
+    container.appendChild(cardWrap);
 
-    // 全部学完提示
-    if (progress.read >= progress.total) {
-      const doneTip = document.createElement('div');
-      doneTip.style.cssText = 'text-align:center;padding:12px;color:var(--text-muted);font-size:13px;';
-      doneTip.innerHTML = '🎉 全部学完！<button class="btn btn-sm" style="margin-left:8px;">重新开始</button>';
-      doneTip.querySelector('button').onclick = () => {
-        Store.resetKnowledgeProgress('finance');
-        Views.render('finance');
-      };
-      container.appendChild(doneTip);
-    }
+    // 渲染单条知识卡片
+    const renderCard = (item) => {
+      const isFav = Store.isFinanceFavorite(item.id);
+      cardWrap.innerHTML = '';
 
-    todayItems.forEach((item) => {
       const card = document.createElement('div');
       card.className = 'finance-knowledge-card';
+      card.style.cursor = 'pointer';
       card.innerHTML = `
         <div class="fk-header">
-          <span class="fk-day">${item.id}</span>
-          <span class="fk-source">一分钟投资课</span>
+          <span class="fk-day">📖 ${this.escape(item.tags[0] || '理财知识')}</span>
+          <span class="fk-source">点击展开/收起全文</span>
         </div>
         <div class="fk-title">${this.escape(item.title)}</div>
-        <div class="fk-desc">${this.escape(item.desc)}</div>
+        <div class="fk-desc fk-desc-collapsed">${this.escape(item.desc)}</div>
+        <div class="fk-detail" style="display:none;white-space:pre-line;font-size:13px;line-height:1.8;color:var(--text-sub);margin-top:10px;padding-top:10px;border-top:1px dashed rgba(245,166,35,0.2);">${this.escape(item.detail || item.desc)}</div>
         <div class="fk-tags">
           ${item.tags.map(t => `<span class="fk-tag">${this.escape(t)}</span>`).join('')}
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span class="fk-expand">点击查看详细讲解 →</span>
-          <button class="fk-memo-btn" data-fkid="${item.id}">📝 加到备忘录</button>
-        </div>
       `;
-      // 点击卡片查看详情（排除按钮区域）
+
+      // 点击卡片展开/收起
+      let expanded = false;
       card.onclick = (e) => {
-        if (e.target.closest('.fk-memo-btn')) return;
-        UI.openFinanceKnowledgeDetail(item);
+        if (e.target.closest('.fk-action-btn')) return;
+        expanded = !expanded;
+        const desc = card.querySelector('.fk-desc');
+        const detail = card.querySelector('.fk-detail');
+        const source = card.querySelector('.fk-source');
+        if (expanded) {
+          desc.style.display = 'none';
+          detail.style.display = 'block';
+          source.textContent = '点击收起 ↑';
+        } else {
+          desc.style.display = 'block';
+          detail.style.display = 'none';
+          source.textContent = '点击展开/收起全文';
+        }
       };
-      // 添加到备忘录
-      card.querySelector('.fk-memo-btn').onclick = (e) => {
+
+      // 按钮区域
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px dashed rgba(245,166,35,0.2);';
+
+      // 换一条看看
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'fk-action-btn';
+      skipBtn.style.cssText = 'flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-soft);color:var(--text-sub);font-size:13px;font-weight:500;cursor:pointer;';
+      skipBtn.textContent = '🔄 换一条看看';
+      skipBtn.onclick = (e) => {
         e.stopPropagation();
-        Store.addToArray('memos', {
-          id: Store.genId(),
-          title: item.title,
-          content: item.detail || item.desc,
-          category: '理财知识',
-          date: Store.todayKey()
-        });
-        UI.toast('已添加到备忘录 ✅');
+        const newItem = Store.skipFinanceKnowledge(item.id, knowledgeDB);
+        currentItem = newItem;
+        renderCard(newItem);
       };
-      container.appendChild(card);
-    });
+
+      // 收藏这条
+      const favBtn = document.createElement('button');
+      favBtn.className = 'fk-action-btn';
+      favBtn.style.cssText = `flex:1;padding:8px 12px;border:none;border-radius:8px;background:${isFav ? 'var(--bg-soft)' : 'var(--primary)'};color:${isFav ? 'var(--text-muted)' : '#fff'};font-size:13px;font-weight:500;cursor:${isFav ? 'default' : 'pointer'};`;
+      favBtn.textContent = isFav ? '⭐ 已收藏' : '⭐ 收藏这条';
+      if (!isFav) {
+        favBtn.onclick = (e) => {
+          e.stopPropagation();
+          const added = Store.addFinanceFavorite(item);
+          if (added) {
+            UI.toast('已收藏 ⭐');
+            renderCard(item);
+            renderFavorites();
+          } else {
+            UI.toast('已经收藏过了');
+          }
+        };
+      }
+
+      btnRow.appendChild(skipBtn);
+      btnRow.appendChild(favBtn);
+      card.appendChild(btnRow);
+
+      cardWrap.appendChild(card);
+    };
+
+    renderCard(currentItem);
+
+    // ===== 我的财经收藏 =====
+    const favSection = document.createElement('div');
+    favSection.style.cssText = 'margin-top:20px;';
+    container.appendChild(favSection);
+
+    const renderFavorites = () => {
+      favSection.innerHTML = '';
+      const favTitle = document.createElement('div');
+      favTitle.className = 'section-title';
+      favTitle.innerHTML = `⭐ 我的财经收藏 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">${Store.getFinanceFavorites().length > 0 ? `(${Store.getFinanceFavorites().length})` : ''}</span>`;
+      favSection.appendChild(favTitle);
+
+      const favorites = Store.getFinanceFavorites();
+      if (favorites.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'text-align:center;padding:20px;color:var(--text-muted);font-size:13px;background:var(--bg-soft);border-radius:12px;';
+        empty.textContent = '还没有收藏，看到喜欢的内容点 ⭐ 收藏';
+        favSection.appendChild(empty);
+        return;
+      }
+
+      const favList = document.createElement('div');
+      favList.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+      favorites.forEach(fav => {
+        const favCard = document.createElement('div');
+        favCard.style.cssText = 'background:var(--bg-soft);border-radius:10px;padding:12px;';
+        favCard.innerHTML = `
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${this.escape(fav.title)}</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                ${fav.tags.map(t => `<span class="fk-tag">${this.escape(t)}</span>`).join('')}
+              </div>
+            </div>
+            <button class="fk-del-btn" data-favid="${fav.id}" style="flex-shrink:0;width:28px;height:28px;border:none;border-radius:50%;background:rgba(255,71,87,0.1);color:#ff4757;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+          </div>
+        `;
+        favCard.querySelector('.fk-del-btn').onclick = () => {
+          Store.removeFinanceFavorite(fav.id);
+          renderFavorites();
+          renderCard(currentItem);
+        };
+        favList.appendChild(favCard);
+      });
+      favSection.appendChild(favList);
+    };
+
+    renderFavorites();
   },
 
   // ===== 财经 =====

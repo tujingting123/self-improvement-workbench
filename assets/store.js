@@ -69,9 +69,11 @@ const Store = {
       // 知识库已添加记录
       addedKnowledgeIds: [],
       // 知识库智能轮换 — 已读追踪 + 用户自定义知识
-      financeKnowledgeRead: {},   // { date: '2026-07-28', readIds: ['f0','f1',...], cycle: 1 }
+      financeKnowledgeRead: {},   // { date: '2026-07-28', readIds: ['f0','f1',...], todayIds: ['f0'], cycle: 1 }
       generalKnowledgeRead: {},   // 同上
       userKnowledge: [],          // 用户手动添加的知识 [{ id, cat, title, desc, tags, addDate }]
+      // 财经知识收藏
+      financeFavorites: [],       // [{ id, title, desc, detail, tags, addDate }]
       // 技能提升 - 文案表达
       copywritingItems: [],
       copywritingCategories: ['标题技巧', '金句收集', '故事结构', '营销文案', '演讲稿'],
@@ -705,6 +707,77 @@ const Store = {
   // 获取用户自定义知识
   getUserKnowledge() {
     return this.data.userKnowledge || [];
+  },
+
+  // ===== 财经知识收藏 =====
+  addFinanceFavorite(item) {
+    if (!this.data.financeFavorites) this.data.financeFavorites = [];
+    // 去重
+    if (this.data.financeFavorites.some(f => f.id === item.id)) return false;
+    this.data.financeFavorites.push({
+      id: item.id,
+      title: item.title,
+      desc: item.desc,
+      detail: item.detail || '',
+      tags: item.tags || [],
+      addDate: this.todayKey()
+    });
+    this.save();
+    return true;
+  },
+
+  removeFinanceFavorite(id) {
+    if (!this.data.financeFavorites) return;
+    this.data.financeFavorites = this.data.financeFavorites.filter(f => f.id !== id);
+    this.save();
+  },
+
+  getFinanceFavorites() {
+    return this.data.financeFavorites || [];
+  },
+
+  isFinanceFavorite(id) {
+    return (this.data.financeFavorites || []).some(f => f.id === id);
+  },
+
+  // 换一条财经知识（把当前这条标记为已读，选一条新的）
+  skipFinanceKnowledge(currentId, knowledgeDB) {
+    const key = 'financeKnowledgeRead';
+    let tracker = this.data[key] || {};
+    const today = this.todayKey();
+    
+    // 确保 tracker 有 todayIds
+    if (!tracker.todayIds) tracker.todayIds = [];
+    if (!tracker.readIds) tracker.readIds = [];
+    
+    // 把当前这条从 todayIds 移除，加入 readIds
+    tracker.todayIds = tracker.todayIds.filter(id => id !== currentId);
+    if (!tracker.readIds.includes(currentId)) {
+      tracker.readIds.push(currentId);
+    }
+    
+    // 从未读池选一条新的
+    const unread = knowledgeDB.filter(item => !tracker.readIds.includes(item.id) && !tracker.todayIds.includes(item.id));
+    
+    if (unread.length === 0) {
+      // 全部已读，重置
+      tracker.readIds = [];
+      tracker.todayIds = [];
+      tracker.cycle = (tracker.cycle || 0) + 1;
+      const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
+      const picked = shuffled[0];
+      tracker.todayIds = [picked.id];
+      this.data[key] = tracker;
+      this.save();
+      return picked;
+    }
+    
+    // 随机选一条未读的
+    const picked = unread[Math.floor(Math.random() * unread.length)];
+    tracker.todayIds = [picked.id];
+    this.data[key] = tracker;
+    this.save();
+    return picked;
   },
 
   // 数据导出

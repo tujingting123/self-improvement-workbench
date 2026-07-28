@@ -1142,6 +1142,13 @@ input, textarea, select {
   margin-bottom: 8px;
 }
 
+.fk-desc-collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .fk-tags {
   display: flex;
   gap: 4px;
