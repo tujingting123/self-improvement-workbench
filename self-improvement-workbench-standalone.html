@@ -11743,31 +11743,89 @@ const FinanceFetcher = {
     { type: '基金', name: '黄金ETF (518880)', trend: '↑', reason: '直接跟踪金价，无个股风险，适合看好黄金长期趋势的投资者，建议逢低分批配置。', tags: ['ETF', '避险', '长期'] }
   ],
 
+  // 财经 RSS 源列表
+  rssSources: [
+    { name: 'FT中文网', url: 'https://www.ftchinese.com/rss/news' },
+    { name: 'IT之家', url: 'https://www.ithome.com/rss/' },
+    { name: '36氪', url: 'https://www.36kr.com/feed' },
+  ],
+
+  // 从 RSS 源抓取最新财经新闻
+  async fetchFromRSS() {
+    const allItems = [];
+    for (const source of this.rssSources) {
+      try {
+        const rssUrl = encodeURIComponent(source.url);
+        const api = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+        const resp = await fetch(api);
+        const data = await resp.json();
+        if (data.status === 'ok' && data.items) {
+          data.items.slice(0, 10).forEach(item => {
+            const descRaw = item.description || item.content || '';
+            const desc = descRaw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+            allItems.push({
+              id: Store.genId(),
+              source: source.name,
+              title: item.title || '无标题',
+              summary: desc || '点击查看原文',
+              content: descRaw.replace(/<[^>]+>/g, '').trim(),
+              link: item.link || '',
+              fetchDate: Store.todayKey(),
+              fetchTime: item.pubDate || '',
+              sector: '综合',
+              stocks: [],
+              url: item.link || '',
+            });
+          });
+        }
+      } catch (e) {
+        console.error(`RSS fetch error for ${source.name}:`, e);
+      }
+    }
+    return allItems;
+  },
+
   async fetch() {
-    UI.toast('正在采集财经内容...');
-    await new Promise(r => setTimeout(r, 1200));
-    const today = Store.todayKey();
+    UI.toast('正在从各平台采集最新财经资讯...');
+    
+    // 先尝试 RSS 实时抓取
+    let newNews = [];
+    try {
+      newNews = await this.fetchFromRSS();
+    } catch (e) {
+      console.error('RSS fetch failed:', e);
+    }
 
-    // 随机抽取 6-8 条新闻
-    const newsPool = [...this.newsPool].sort(() => Math.random() - 0.5);
-    const newsCount = Math.min(6 + Math.floor(Math.random() * 3), newsPool.length);
-    const newNews = newsPool.slice(0, newsCount).map(item => ({
-      id: Store.genId(), ...item, fetchDate: today
-    }));
+    // 如果 RSS 失败，回退到本地新闻池
+    if (newNews.length === 0) {
+      UI.toast('网络不佳，使用本地资讯...');
+      await new Promise(r => setTimeout(r, 500));
+      const today = Store.todayKey();
+      const newsPool = [...this.newsPool].sort(() => Math.random() - 0.5);
+      const newsCount = Math.min(5, newsPool.length);
+      newNews = newsPool.slice(0, newsCount).map(item => ({
+        id: Store.genId(), ...item, fetchDate: today
+      }));
+    }
 
-    // 随机抽取 5-7 条推荐板块
+    // 按标题去重
+    const existing = Store.get('financeNews') || [];
+    const existingTitles = new Set(existing.map(e => e.title));
+    const freshNews = newNews.filter(item => !existingTitles.has(item.title));
+    const todayNews = (freshNews.length > 0 ? freshNews : newNews).slice(0, 5);
+
+    // 推荐板块（从本地池随机抽取）
     const recPool = [...this.recommendationPool].sort(() => Math.random() - 0.5);
-    const recCount = Math.min(5 + Math.floor(Math.random() * 3), recPool.length);
+    const recCount = Math.min(5, recPool.length);
     const newRecs = recPool.slice(0, recCount).map(item => ({
       id: Store.genId(), ...item
     }));
 
-    // 替换当日内容（保留历史）
-    const oldNews = Store.get('financeNews').filter(e => e.fetchDate !== today);
-    Store.set('financeNews', [...newNews, ...oldNews].slice(0, 50));
+    // 只保留今天的新闻，过往的不保留
+    Store.set('financeNews', todayNews);
     Store.set('financeRecommendations', newRecs);
-    Store.set('financeLastFetch', today + ' 09:00');
-    UI.toast(`已采集 ${newNews.length} 条财经资讯 + ${newRecs.length} 个推荐板块`);
+    Store.set('financeLastFetch', Store.todayKey() + ' 09:00');
+    UI.toast(`已采集 ${todayNews.length} 条最新财经资讯 + ${newRecs.length} 个推荐板块`);
   }
 };
 
