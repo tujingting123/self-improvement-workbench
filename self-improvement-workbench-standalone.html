@@ -4185,6 +4185,26 @@ const Store = {
     
     // 同一天：直接返回缓存的 todayIds 对应的条目
     const todayIds = tracker.todayIds || [];
+    
+    // 兜底：如果 todayIds 为空（可能是旧数据迁移），重新选取
+    if (todayIds.length === 0) {
+      const unread = knowledgeDB.filter(item => !(tracker.readIds || []).includes(item.id));
+      if (unread.length === 0) {
+        const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
+        const picked = shuffled.slice(0, Math.min(count, shuffled.length));
+        tracker.readIds = [];
+        tracker.todayIds = picked.map(p => p.id);
+        tracker.cycle = (tracker.cycle || 0) + 1;
+      } else {
+        const picked = unread.slice(0, Math.min(count, unread.length));
+        tracker.todayIds = picked.map(p => p.id);
+      }
+      this.data[key] = tracker;
+      this.save();
+      const items = tracker.todayIds.map(id => knowledgeDB.find(k => k.id === id)).filter(Boolean);
+      return { items, cycle: tracker.cycle || 0, total: knowledgeDB.length, read: (tracker.readIds || []).length + tracker.todayIds.length };
+    }
+    
     const items = todayIds.map(id => knowledgeDB.find(k => k.id === id)).filter(Boolean);
     const cycle = tracker.cycle || 0;
     
