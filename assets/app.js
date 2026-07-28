@@ -4377,30 +4377,90 @@ const AIFetcher = {
     { source: '量子位', title: 'AI生成3D模型突破：Tripo AI发布文生3D，10秒生成高质量模型', desc: 'Tripo AI发布文生3D模型生成技术，10秒生成可商用3D模型。', content: 'AI 3D生成领域最新突破：\n\n1. Tripo AI：文生3D模型，10秒生成，质量达商用标准。\n2. 技术：基于扩散模型+神经辐射场（NeRF），从2D图像重建3D。\n3. 应用：游戏开发、电商展示、建筑可视化、VR/AR内容。\n4. 成本：传统3D建模$500-5000/个，AI生成$0.5/个。\n5. 竞品：Meshy、Luma AI、Stability AI的3D模型。\n6. 市场：预计2027年AI 3D生成市场规模达50亿美元。\n\n影响：3D内容创作门槛大幅降低，可能催生"全民3D创作"时代。', tags: ['AI 3D', 'Tripo', 'AIGC', '3D建模'] },
   ],
 
+  // RSS 源列表（通过 rss2json 免费代理转换，支持 CORS）
+  rssSources: [
+    { name: 'IT之家', url: 'https://www.ithome.com/rss/', type: 'tech' },
+    { name: '36氪', url: 'https://www.36kr.com/feed', type: 'business' },
+    { name: 'Hacker News', url: 'https://hnrss.org/frontpage', type: 'global' },
+  ],
+
+  // 从 RSS 源抓取最新新闻
+  async fetchFromRSS() {
+    const allItems = [];
+    for (const source of this.rssSources) {
+      try {
+        const rssUrl = encodeURIComponent(source.url);
+        const api = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+        const resp = await fetch(api);
+        const data = await resp.json();
+        if (data.status === 'ok' && data.items) {
+          data.items.slice(0, 10).forEach(item => {
+            // 提取纯文本摘要（去除 HTML 标签）
+            const descRaw = item.description || item.content || '';
+            const desc = descRaw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+            allItems.push({
+              id: Store.genId(),
+              source: source.name,
+              title: item.title || '无标题',
+              desc: desc || '点击查看原文',
+              content: descRaw.replace(/<[^>]+>/g, '').trim(),
+              link: item.link || '',
+              fetchDate: Store.todayKey(),
+              fetchTime: item.pubDate || '',
+              tags: source.type === 'global' ? ['国际', '技术'] : ['科技', '资讯']
+            });
+          });
+        }
+      } catch (e) {
+        console.error(`RSS fetch error for ${source.name}:`, e);
+      }
+    }
+    return allItems;
+  },
+
   async fetch() {
-    UI.toast('正在采集AI新闻...');
-    await new Promise(r => setTimeout(r, 1000));
-    const today = Store.todayKey();
-    const pool = [...this.newsDatabase].sort(() => Math.random() - 0.5);
-    // 获取已有历史新闻的标题，用于去重
+    UI.toast('正在从各平台采集最新AI新闻...');
+    
+    // 先尝试从 RSS 源实时抓取
+    let newItems = [];
+    try {
+      newItems = await this.fetchFromRSS();
+    } catch (e) {
+      console.error('RSS fetch failed:', e);
+    }
+
+    // 如果 RSS 抓取失败或为空，回退到本地新闻池
+    if (newItems.length === 0) {
+      UI.toast('网络不佳，使用本地资讯...');
+      await new Promise(r => setTimeout(r, 500));
+      const today = Store.todayKey();
+      const existing = Store.get('aiItems') || [];
+      const existingTitles = new Set(existing.map(e => e.title));
+      const freshPool = this.newsDatabase.filter(item => !existingTitles.has(item.title));
+      const finalPool = freshPool.length >= 5 ? freshPool : this.newsDatabase;
+      const pool = [...finalPool].sort(() => Math.random() - 0.5);
+      const pickCount = Math.min(5, pool.length);
+      newItems = pool.slice(0, pickCount).map(item => ({
+        id: Store.genId(), ...item, fetchDate: today
+      }));
+    }
+
+    // 按标题去重（不重复推送已推过的新闻）
     const existing = Store.get('aiItems') || [];
     const existingTitles = new Set(existing.map(e => e.title));
-    // 从池中筛选出和历史不重复的新闻
-    const freshPool = pool.filter(item => !existingTitles.has(item.title));
-    // 如果不重复的新闻不够，用全部池子补（极端情况）
-    const finalPool = freshPool.length >= 5 ? freshPool : pool;
-    const pickCount = Math.min(8 + Math.floor(Math.random() * 5), finalPool.length);
-    const newItems = finalPool.slice(0, pickCount).map(item => ({
-      id: Store.genId(), ...item, fetchDate: today
-    }));
+    const freshItems = newItems.filter(item => !existingTitles.has(item.title));
+    
+    // 取今天的前 5 条
+    const todayItems = (freshItems.length > 0 ? freshItems : newItems).slice(0, 5);
+
     const shuffledTools = [...this.toolsDatabase].sort(() => Math.random() - 0.5);
     Store.set('aiTools', shuffledTools);
-    // 只保留今天的新闻 + 最近的的历史（按日期分组，最多保留最近7天）
-    const others = existing.filter(e => e.fetchDate !== today);
-    const allItems = [...newItems, ...others].slice(0, 80);
-    Store.set('aiItems', allItems);
-    Store.set('aiLastFetch', today + ' 09:00');
-    UI.toast('已采集 ' + newItems.length + ' 条AI新闻 + ' + shuffledTools.length + ' 个AI工具');
+    
+    // 保留历史 + 今天的新闻
+    const others = existing.filter(e => e.fetchDate !== Store.todayKey());
+    Store.set('aiItems', [...todayItems, ...others].slice(0, 80));
+    Store.set('aiLastFetch', Store.todayKey() + ' 09:00');
+    UI.toast(`已采集 ${todayItems.length} 条最新资讯 + ${shuffledTools.length} 个AI工具`);
   }
 };
 
