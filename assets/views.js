@@ -1669,9 +1669,28 @@ const Views = {
         <div class="fk-tags">
           ${item.tags.map(t => `<span class="fk-tag">${this.escape(t)}</span>`).join('')}
         </div>
-        <div class="fk-expand">点击查看详细讲解 →</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="fk-expand">点击查看详细讲解 →</span>
+          <button class="fk-memo-btn" data-fkid="${item.id}">📝 加到备忘录</button>
+        </div>
       `;
-      card.onclick = () => UI.openFinanceKnowledgeDetail(item);
+      // 点击卡片查看详情（排除按钮区域）
+      card.onclick = (e) => {
+        if (e.target.closest('.fk-memo-btn')) return;
+        UI.openFinanceKnowledgeDetail(item);
+      };
+      // 添加到备忘录
+      card.querySelector('.fk-memo-btn').onclick = (e) => {
+        e.stopPropagation();
+        Store.addToArray('memos', {
+          id: Store.genId(),
+          title: item.title,
+          content: item.detail || item.desc,
+          category: '理财知识',
+          date: Store.todayKey()
+        });
+        UI.toast('已添加到备忘录 ✅');
+      };
       container.appendChild(card);
     });
   },
@@ -2424,8 +2443,20 @@ const Views = {
             <div class="knowledge-card-tags">
               ${(item.tags || []).map(t => `<span class="knowledge-card-tag">${this.escape(t)}</span>`).join('')}
             </div>
+            <button class="knowledge-add-btn" data-memo="${item.id}">📝 加到备忘录</button>
           </div>
         `;
+        card.querySelector('[data-memo]').onclick = (e) => {
+          e.stopPropagation();
+          Store.addToArray('memos', {
+            id: Store.genId(),
+            title: item.title,
+            content: item.desc,
+            category: item.cat || '知识库',
+            date: Store.todayKey()
+          });
+          UI.toast('已添加到备忘录 ✅');
+        };
         dailyWrap.appendChild(card);
       });
       container.appendChild(dailyWrap);

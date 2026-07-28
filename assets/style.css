@@ -1163,6 +1163,25 @@ input, textarea, select {
   padding-top: 8px;
   border-top: 1px dashed rgba(245,166,35,0.2);
   font-weight: 500;
+  flex: 1;
+}
+
+.fk-memo-btn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border: 1px solid var(--primary);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+.fk-memo-btn:active {
+  background: var(--primary);
+  color: #fff;
 }
 
 [data-theme="dark"] .finance-knowledge-card {

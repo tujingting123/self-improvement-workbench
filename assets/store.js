@@ -574,53 +574,64 @@ const Store = {
 
   // ===== 知识库智能轮换 =====
 
-  // 获取当日未读的知识条目（理财知识）
+  // 获取当日知识推荐（同一天始终返回相同内容，不随刷新变化）
   // dbType: 'finance' | 'general'
   getDailyKnowledge(dbType, knowledgeDB, count = 5) {
     const today = this.todayKey();
     const key = dbType === 'finance' ? 'financeKnowledgeRead' : 'generalKnowledgeRead';
     let tracker = this.data[key] || {};
     
-    // 新的一天，检查是否需要重置
+    // 跨天了：先把昨天的 todayIds 正式标记为已读，然后选今天的
     if (!tracker.date || tracker.date !== today) {
-      // 检查是否上一轮全部读完
-      const prevRead = tracker.readIds || [];
-      const totalItems = knowledgeDB.length;
-      if (prevRead.length >= totalItems) {
-        // 全部读完，开始新一轮
-        tracker = { date: today, readIds: [], cycle: (tracker.cycle || 0) + 1 };
-      } else {
-        tracker = { date: today, readIds: prevRead.slice(), cycle: tracker.cycle || 0 };
+      const prevTodayIds = tracker.todayIds || [];
+      
+      // 跨天时，把昨天的 todayIds 合并到 readIds
+      if (prevTodayIds.length > 0) {
+        const prevRead = tracker.readIds || [];
+        const merged = [...new Set([...prevRead, ...prevTodayIds])];
+        tracker.readIds = merged;
       }
+      
+      // 检查是否上一轮全部读完
+      const totalItems = knowledgeDB.length;
+      const currentRead = tracker.readIds || [];
+      if (currentRead.length >= totalItems) {
+        tracker = { date: today, readIds: [], todayIds: [], cycle: (tracker.cycle || 0) + 1 };
+      } else {
+        tracker.date = today;
+        tracker.todayIds = [];
+        tracker.cycle = tracker.cycle || 0;
+      }
+      
+      // 选今天的推荐（从未读池中取）
+      const unread = knowledgeDB.filter(item => !tracker.readIds.includes(item.id));
+      
+      if (unread.length === 0) {
+        // 全部已读，重置并打乱
+        const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
+        const picked = shuffled.slice(0, Math.min(count, shuffled.length));
+        tracker.readIds = [];
+        tracker.todayIds = picked.map(p => p.id);
+        tracker.cycle = (tracker.cycle || 0) + 1;
+        this.data[key] = tracker;
+        this.save();
+        return { items: picked, cycle: tracker.cycle, total: knowledgeDB.length, read: tracker.todayIds.length };
+      }
+      
+      const picked = unread.slice(0, Math.min(count, unread.length));
+      tracker.todayIds = picked.map(p => p.id);
       this.data[key] = tracker;
       this.save();
+      
+      return { items: picked, cycle: tracker.cycle, total: knowledgeDB.length, read: (tracker.readIds || []).length + tracker.todayIds.length };
     }
-
-    const readIds = tracker.readIds || [];
+    
+    // 同一天：直接返回缓存的 todayIds 对应的条目
+    const todayIds = tracker.todayIds || [];
+    const items = todayIds.map(id => knowledgeDB.find(k => k.id === id)).filter(Boolean);
     const cycle = tracker.cycle || 0;
     
-    // 从未读池中选取
-    const unread = knowledgeDB.filter(item => !readIds.includes(item.id));
-    
-    if (unread.length === 0) {
-      // 全部已读，重置并打乱重新开始
-      const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
-      const picked = shuffled.slice(0, Math.min(count, shuffled.length));
-      tracker.readIds = picked.map(p => p.id);
-      tracker.cycle = cycle + 1;
-      this.data[key] = tracker;
-      this.save();
-      return { items: picked, cycle: cycle + 1, total: knowledgeDB.length, read: picked.length };
-    }
-    
-    // 从未读中取 count 条（或全部未读）
-    const picked = unread.slice(0, Math.min(count, unread.length));
-    const newReadIds = [...readIds, ...picked.map(p => p.id)];
-    tracker.readIds = newReadIds;
-    this.data[key] = tracker;
-    this.save();
-    
-    return { items: picked, cycle, total: knowledgeDB.length, read: newReadIds.length };
+    return { items, cycle, total: knowledgeDB.length, read: (tracker.readIds || []).length + todayIds.length };
   },
 
   // 获取知识库阅读进度
@@ -628,9 +639,11 @@ const Store = {
     const key = dbType === 'finance' ? 'financeKnowledgeRead' : 'generalKnowledgeRead';
     const tracker = this.data[key] || {};
     const readIds = tracker.readIds || [];
+    const todayIds = tracker.todayIds || [];
     const cycle = tracker.cycle || 0;
     const total = knowledgeDB.length;
-    const read = Math.min(readIds.length, total);
+    // 已读 = 历史已读 + 今天已看
+    const read = Math.min(new Set([...readIds, ...todayIds]).size, total);
     return { read, total, cycle, percent: total > 0 ? Math.round(read / total * 100) : 0 };
   },
 
