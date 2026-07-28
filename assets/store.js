@@ -74,6 +74,9 @@ const Store = {
       userKnowledge: [],          // 用户手动添加的知识 [{ id, cat, title, desc, tags, addDate }]
       // 财经知识收藏
       financeFavorites: [],       // [{ id, title, desc, detail, tags, addDate }]
+      // 培训知识轮换 + 收藏
+      trainingKnowledgeRead: {},  // 培训知识轮换追踪
+      trainingFavorites: [],      // 培训文章收藏
       // 技能提升 - 文案表达
       copywritingItems: [],
       copywritingCategories: ['标题技巧', '金句收集', '故事结构', '营销文案', '演讲稿'],
@@ -119,7 +122,7 @@ const Store = {
 
   // v38: 清除旧格式知识库 tracker（没有 todayIds 字段会导致推荐空白）
   migrateKnowledgeTracker() {
-    ['financeKnowledgeRead', 'generalKnowledgeRead'].forEach(k => {
+    ['financeKnowledgeRead', 'generalKnowledgeRead', 'trainingKnowledgeRead'].forEach(k => {
       const t = this.data[k];
       if (t && t.date && !t.hasOwnProperty('todayIds')) {
         delete this.data[k];
@@ -773,6 +776,72 @@ const Store = {
     }
     
     // 随机选一条未读的
+    const picked = unread[Math.floor(Math.random() * unread.length)];
+    tracker.todayIds = [picked.id];
+    this.data[key] = tracker;
+    this.save();
+    return picked;
+  },
+
+  // ===== 培训知识收藏 =====
+  addTrainingFavorite(item) {
+    if (!this.data.trainingFavorites) this.data.trainingFavorites = [];
+    if (this.data.trainingFavorites.some(f => f.id === item.id)) return false;
+    this.data.trainingFavorites.push({
+      id: item.id,
+      title: item.title,
+      desc: item.desc,
+      detail: item.detail || '',
+      tags: item.tags || [],
+      cat: item.cat || '',
+      addDate: this.todayKey()
+    });
+    this.save();
+    return true;
+  },
+
+  removeTrainingFavorite(id) {
+    if (!this.data.trainingFavorites) return;
+    this.data.trainingFavorites = this.data.trainingFavorites.filter(f => f.id !== id);
+    this.save();
+  },
+
+  getTrainingFavorites() {
+    return this.data.trainingFavorites || [];
+  },
+
+  isTrainingFavorite(id) {
+    return (this.data.trainingFavorites || []).some(f => f.id === id);
+  },
+
+  // 换一条培训知识
+  skipTrainingKnowledge(currentId, knowledgeDB) {
+    const key = 'trainingKnowledgeRead';
+    let tracker = this.data[key] || {};
+    const today = this.todayKey();
+
+    if (!tracker.todayIds) tracker.todayIds = [];
+    if (!tracker.readIds) tracker.readIds = [];
+
+    tracker.todayIds = tracker.todayIds.filter(id => id !== currentId);
+    if (!tracker.readIds.includes(currentId)) {
+      tracker.readIds.push(currentId);
+    }
+
+    const unread = knowledgeDB.filter(item => !tracker.readIds.includes(item.id) && !tracker.todayIds.includes(item.id));
+
+    if (unread.length === 0) {
+      tracker.readIds = [];
+      tracker.todayIds = [];
+      tracker.cycle = (tracker.cycle || 0) + 1;
+      const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
+      const picked = shuffled[0];
+      tracker.todayIds = [picked.id];
+      this.data[key] = tracker;
+      this.save();
+      return picked;
+    }
+
     const picked = unread[Math.floor(Math.random() * unread.length)];
     tracker.todayIds = [picked.id];
     this.data[key] = tracker;
