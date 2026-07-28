@@ -1811,16 +1811,30 @@ const Views = {
         favCard.style.cssText = 'background:var(--bg-soft);border-radius:10px;padding:12px;';
         favCard.innerHTML = `
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-            <div style="flex:1;">
+            <div style="flex:1;cursor:pointer;" class="fav-expand-area">
               <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${this.escape(fav.title)}</div>
-              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <div class="fav-detail" style="display:none;font-size:13px;line-height:1.8;color:var(--text-sub);margin-top:8px;padding-top:8px;border-top:1px dashed rgba(245,166,35,0.2);white-space:pre-line;">${this.escape(fav.detail || fav.desc || '')}</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">
                 ${fav.tags.map(t => `<span class="fk-tag">${this.escape(t)}</span>`).join('')}
+                <span style="font-size:11px;color:var(--text-muted);align-self:center;">点击${fav.detail ? '展开/收起全文' : '查看'}</span>
               </div>
             </div>
             <button class="fk-del-btn" data-favid="${fav.id}" style="flex-shrink:0;width:28px;height:28px;border:none;border-radius:50%;background:rgba(255,71,87,0.1);color:#ff4757;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
           </div>
         `;
-        favCard.querySelector('.fk-del-btn').onclick = () => {
+        // 点击展开/收起
+        const expandArea = favCard.querySelector('.fav-expand-area');
+        const detail = favCard.querySelector('.fav-detail');
+        expandArea.onclick = (e) => {
+          if (e.target.closest('.fk-del-btn')) return;
+          if (detail.style.display === 'none') {
+            detail.style.display = 'block';
+          } else {
+            detail.style.display = 'none';
+          }
+        };
+        favCard.querySelector('.fk-del-btn').onclick = (e) => {
+          e.stopPropagation();
           Store.removeFinanceFavorite(fav.id);
           renderFavorites();
           renderCard(currentItem);
@@ -2031,16 +2045,30 @@ const Views = {
         favCard.style.cssText = 'background:var(--bg-soft);border-radius:10px;padding:12px;';
         favCard.innerHTML = `
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-            <div style="flex:1;">
+            <div style="flex:1;cursor:pointer;" class="fav-expand-area">
               <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${this.escape(fav.title)}</div>
-              <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <div class="fav-detail" style="display:none;font-size:13px;line-height:1.8;color:var(--text-sub);margin-top:8px;padding-top:8px;border-top:1px dashed rgba(245,166,35,0.2);white-space:pre-line;">${this.escape(fav.detail || fav.desc || '')}</div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">
                 ${fav.tags.map(t => `<span class="fk-tag">${this.escape(t)}</span>`).join('')}
+                <span style="font-size:11px;color:var(--text-muted);align-self:center;">点击${fav.detail ? '展开/收起全文' : '查看'}</span>
               </div>
             </div>
             <button class="tk-del-btn" data-favid="${fav.id}" style="flex-shrink:0;width:28px;height:28px;border:none;border-radius:50%;background:rgba(255,71,87,0.1);color:#ff4757;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
           </div>
         `;
-        favCard.querySelector('.tk-del-btn').onclick = () => {
+        // 点击展开/收起
+        const expandArea = favCard.querySelector('.fav-expand-area');
+        const detail = favCard.querySelector('.fav-detail');
+        expandArea.onclick = (e) => {
+          if (e.target.closest('.tk-del-btn')) return;
+          if (detail.style.display === 'none') {
+            detail.style.display = 'block';
+          } else {
+            detail.style.display = 'none';
+          }
+        };
+        favCard.querySelector('.tk-del-btn').onclick = (e) => {
+          e.stopPropagation();
           Store.removeTrainingFavorite(fav.id);
           renderFavorites();
           renderCard(currentItem);
