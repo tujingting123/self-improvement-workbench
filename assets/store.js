@@ -68,6 +68,10 @@ const Store = {
       inspirationCategories: ['PPT设计', '海报设计', '配色方案', '文案灵感', '排版参考'],
       // 知识库已添加记录
       addedKnowledgeIds: [],
+      // 知识库智能轮换 — 已读追踪 + 用户自定义知识
+      financeKnowledgeRead: {},   // { date: '2026-07-28', readIds: ['f0','f1',...], cycle: 1 }
+      generalKnowledgeRead: {},   // 同上
+      userKnowledge: [],          // 用户手动添加的知识 [{ id, cat, title, desc, tags, addDate }]
       // 技能提升 - 文案表达
       copywritingItems: [],
       copywritingCategories: ['标题技巧', '金句收集', '故事结构', '营销文案', '演讲稿'],
@@ -566,6 +570,95 @@ const Store = {
       });
     }
     return result;
+  },
+
+  // ===== 知识库智能轮换 =====
+
+  // 获取当日未读的知识条目（理财知识）
+  // dbType: 'finance' | 'general'
+  getDailyKnowledge(dbType, knowledgeDB, count = 5) {
+    const today = this.todayKey();
+    const key = dbType === 'finance' ? 'financeKnowledgeRead' : 'generalKnowledgeRead';
+    let tracker = this.data[key] || {};
+    
+    // 新的一天，检查是否需要重置
+    if (!tracker.date || tracker.date !== today) {
+      // 检查是否上一轮全部读完
+      const prevRead = tracker.readIds || [];
+      const totalItems = knowledgeDB.length;
+      if (prevRead.length >= totalItems) {
+        // 全部读完，开始新一轮
+        tracker = { date: today, readIds: [], cycle: (tracker.cycle || 0) + 1 };
+      } else {
+        tracker = { date: today, readIds: prevRead.slice(), cycle: tracker.cycle || 0 };
+      }
+      this.data[key] = tracker;
+      this.save();
+    }
+
+    const readIds = tracker.readIds || [];
+    const cycle = tracker.cycle || 0;
+    
+    // 从未读池中选取
+    const unread = knowledgeDB.filter(item => !readIds.includes(item.id));
+    
+    if (unread.length === 0) {
+      // 全部已读，重置并打乱重新开始
+      const shuffled = [...knowledgeDB].sort(() => Math.random() - 0.5);
+      const picked = shuffled.slice(0, Math.min(count, shuffled.length));
+      tracker.readIds = picked.map(p => p.id);
+      tracker.cycle = cycle + 1;
+      this.data[key] = tracker;
+      this.save();
+      return { items: picked, cycle: cycle + 1, total: knowledgeDB.length, read: picked.length };
+    }
+    
+    // 从未读中取 count 条（或全部未读）
+    const picked = unread.slice(0, Math.min(count, unread.length));
+    const newReadIds = [...readIds, ...picked.map(p => p.id)];
+    tracker.readIds = newReadIds;
+    this.data[key] = tracker;
+    this.save();
+    
+    return { items: picked, cycle, total: knowledgeDB.length, read: newReadIds.length };
+  },
+
+  // 获取知识库阅读进度
+  getKnowledgeProgress(dbType, knowledgeDB) {
+    const key = dbType === 'finance' ? 'financeKnowledgeRead' : 'generalKnowledgeRead';
+    const tracker = this.data[key] || {};
+    const readIds = tracker.readIds || [];
+    const cycle = tracker.cycle || 0;
+    const total = knowledgeDB.length;
+    const read = Math.min(readIds.length, total);
+    return { read, total, cycle, percent: total > 0 ? Math.round(read / total * 100) : 0 };
+  },
+
+  // 重置知识库阅读进度
+  resetKnowledgeProgress(dbType) {
+    const key = dbType === 'finance' ? 'financeKnowledgeRead' : 'generalKnowledgeRead';
+    this.data[key] = { date: '', readIds: [], cycle: 0 };
+    this.save();
+  },
+
+  // 添加用户自定义知识
+  addUserKnowledge(item) {
+    if (!this.data.userKnowledge) this.data.userKnowledge = [];
+    this.data.userKnowledge.push(item);
+    this.save();
+    return item;
+  },
+
+  // 删除用户自定义知识
+  deleteUserKnowledge(id) {
+    if (!this.data.userKnowledge) return;
+    this.data.userKnowledge = this.data.userKnowledge.filter(k => k.id !== id);
+    this.save();
+  },
+
+  // 获取用户自定义知识
+  getUserKnowledge() {
+    return this.data.userKnowledge || [];
   },
 
   // 数据导出
