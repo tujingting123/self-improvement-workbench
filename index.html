@@ -5,17 +5,26 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <!-- v48: 强制缓存清除 -->
+  <!-- v49: 强制缓存清除 + 动态加载最新JS -->
   <script>
-    // 强制清除旧版本缓存，确保加载最新 JS
     (function() {
-      var v = localStorage.getItem('_app_version');
-      if (v !== 'v49') {
-        localStorage.setItem('_app_version', 'v48');
-        // 强制刷新页面以清除浏览器缓存
-        if (v && v !== 'v48') {
-          location.reload(true);
-        }
+      var VERSION = 'v49';
+      var stored = localStorage.getItem('_app_version');
+      // 每次加载都强制带版本号参数，绕过缓存
+      var scripts = [
+        './assets/store.js?v=' + VERSION + '&t=' + Date.now(),
+        './assets/views.js?v=' + VERSION + '&t=' + Date.now(),
+        './assets/app.js?v=' + VERSION + '&t=' + Date.now()
+      ];
+      scripts.forEach(function(src) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.async = false;
+        document.head.appendChild(s);
+      });
+      // 如果版本变了，记录一下
+      if (stored !== VERSION) {
+        localStorage.setItem('_app_version', VERSION);
       }
     })();
   </script>
@@ -27,7 +36,7 @@
   <meta name="description" content="身材管理、英语学习、阅读记录、AI学习、财经资讯、穿搭灵感、日记备忘、灵感集、技能提升">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <title>自我提升工作台</title>
-  <link rel="stylesheet" href="./assets/style.css">
+  <link rel="stylesheet" href="./assets/style.css?v=49&t=1">
 </head>
 <body>
   <div id="app">
@@ -88,8 +97,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="./assets/store.js?v=49"></script>
-  <script src="./assets/views.js?v=49"></script>
-  <script src="./assets/app.js?v=49"></script>
+  <!-- JS 通过上方脚本动态加载，带时间戳参数强制绕过缓存 -->
 </body>
 </html>
