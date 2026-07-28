@@ -1992,7 +1992,47 @@ input, textarea, select {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+
+/* 可折叠的任务卡片 */
+.eng-task-collapsible {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 0;
+}
+
+.eng-task-summary {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.eng-task-arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.3s;
+  flex-shrink: 0;
+}
+
+.eng-task-arrow.collapsed {
+  transform: rotate(-90deg);
+}
+
+.eng-task-body {
+  transition: max-height 0.35s ease, opacity 0.3s, padding 0.3s;
+  max-height: 2000px;
+  opacity: 1;
+  overflow: hidden;
+  padding-top: 12px;
+}
+
+.eng-task-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  margin: 0;
 }
 
 .eng-task-title {

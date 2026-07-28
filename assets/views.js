@@ -532,24 +532,24 @@ const Views = {
 
   // ===== 2. 英语（重构：新概念+EnglishPod+雅思） =====
   renderEnglish(container) {
-    this.renderTodayCard(container, 'english', '学习');
-
-    // 每日出题
+    // 1. 每日出题（最重要）
     this.renderDailyQuiz(container);
 
-    // 英语打卡日历
-    this.renderEnglishCalendar(container);
+    // 2. 今日进度卡片（打卡状态）
+    this.renderTodayCard(container, 'english', '学习');
 
-    // 学习统计
-    this.renderEnglishStats(container);
-
-    // 顶部：所有单词和短语整合复习
-    this.renderEnglishReview(container);
-
+    // 3. 打卡区域 — 新概念和 EnglishPod 默认折叠
     const tasks = Store.get('englishTasks');
     tasks.forEach(task => {
       container.appendChild(this.renderEnglishTaskCard(task));
     });
+
+    // 4. 日历 + 统计合并
+    this.renderEnglishCalendar(container);
+    this.renderEnglishStats(container);
+
+    // 5. 单词短语复习（底部）
+    this.renderEnglishReview(container);
   },
 
   // 英语打卡日历（可点击查看当日内容）
@@ -1015,13 +1015,30 @@ const Views = {
     card.className = 'eng-task-card';
     card.dataset.id = task.id;
 
+    // 标题栏（可点击折叠）
     const header = document.createElement('div');
-    header.className = 'eng-task-header';
+    header.className = 'eng-task-header eng-task-collapsible';
+    const hasWords = (task.words || []).length > 0 || (task.phrases || []).length > 0;
     header.innerHTML = `
       <div class="checkbox ${done ? 'checked' : ''}" data-action="toggle" data-id="${task.id}"></div>
       <div class="eng-task-name ${done ? 'done' : ''}" style="flex:1;font-size:15px;font-weight:600;">${this.escape(task.name)}</div>
+      <span class="eng-task-summary">
+        ${hasWords ? `${(task.words||[]).length}词·${(task.phrases||[]).length}短语` : '点击展开'}
+      </span>
+      <span class="eng-task-arrow collapsed">▾</span>
     `;
+
+    const body = document.createElement('div');
+    body.className = 'eng-task-body collapsed';
     card.appendChild(header);
+    card.appendChild(body);
+
+    // 点击标题折叠/展开
+    header.onclick = (e) => {
+      if (e.target.closest('[data-action="toggle"]')) return; // 不拦截checkbox
+      body.classList.toggle('collapsed');
+      header.querySelector('.eng-task-arrow').classList.toggle('collapsed');
+    };
 
     // ===== 新概念英语：课程进度 + PDF导入 =====
     if (task.id === 'e1') {
@@ -1062,7 +1079,7 @@ const Views = {
           ` : '<div style="font-size:11px;color:var(--text-muted);text-align:center;padding:8px 0;">暂无PDF资料，点击"导入PDF"添加</div>'}
         </div>
       `;
-      card.appendChild(progDiv);
+      body.appendChild(progDiv);
     }
 
     // ===== EnglishPod：听力打卡 =====
@@ -1088,7 +1105,7 @@ const Views = {
           `).join('')}
         </div>` : ''}
       `;
-      card.appendChild(epDiv);
+      body.appendChild(epDiv);
     }
 
     // 学习主题（textarea 支持换行）
@@ -1098,7 +1115,7 @@ const Views = {
       <div class="label">今日学习内容</div>
       <textarea class="textarea eng-topic-textarea" data-action="topic" data-id="${task.id}" placeholder="记录今天学了什么...支持换行">${this.escape(task.topic || '')}</textarea>
     `;
-    card.appendChild(topicDiv);
+    body.appendChild(topicDiv);
 
     // 生词板块
     const wordsSection = document.createElement('div');
@@ -1136,7 +1153,7 @@ const Views = {
     addWordBtn.innerHTML = '+ 添加生词';
     addWordBtn.onclick = () => UI.openWordModal(task.id);
     wordsSection.appendChild(addWordBtn);
-    card.appendChild(wordsSection);
+    body.appendChild(wordsSection);
 
     // 短语板块（带删除）
     const phraseSection = document.createElement('div');
@@ -1166,7 +1183,7 @@ const Views = {
     addPhraseBtn.innerHTML = '+ 添加短语';
     addPhraseBtn.onclick = () => UI.openPhraseModal(task.id);
     phraseSection.appendChild(addPhraseBtn);
-    card.appendChild(phraseSection);
+    body.appendChild(phraseSection);
 
     // 事件委托
     card.onclick = (e) => {
