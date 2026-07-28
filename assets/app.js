@@ -4673,6 +4673,85 @@ const FinanceFetcher = {
   }
 };
 
+// ===== 培训内容采集器 =====
+const TrainingFetcher = {
+  // 培训/学习相关的 RSS 源
+  rssSources: [
+    { name: 'HR Bartender', url: 'https://feeds.feedburner.com/hrbartender', type: 'HR/管理' },
+    { name: '少数派', url: 'https://sspai.com/feed', type: '效率/学习方法' },
+    { name: 'FT中文网', url: 'https://www.ftchinese.com/rss/news', type: '管理/职场' },
+  ],
+
+  // 关键词过滤：只保留和培训/学习/管理/HR相关的文章
+  keywords: ['培训', '学习', '管理', '领导', '人才', '组织', '员工', '技能', '成长', '教练',
+    'ment', 'train', 'learn', 'leader', 'manage', 'employee', 'skill', 'coach', 'development', 'HR',
+    '效率', '职场', '团队', '文化', '绩效', 'feedback', 'teambuild', 'leadership'],
+
+  async fetchFromRSS() {
+    const allItems = [];
+    for (const source of this.rssSources) {
+      try {
+        const rssUrl = encodeURIComponent(source.url);
+        const api = `https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`;
+        const resp = await fetch(api);
+        const data = await resp.json();
+        if (data.status === 'ok' && data.items) {
+          data.items.slice(0, 15).forEach(item => {
+            const title = item.title || '';
+            const descRaw = item.description || item.content || '';
+            const desc = descRaw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            // 关键词过滤
+            const fullText = (title + ' ' + desc).toLowerCase();
+            const isRelevant = this.keywords.some(kw => fullText.includes(kw.toLowerCase()));
+            if (isRelevant) {
+              allItems.push({
+                id: Store.genId(),
+                source: source.name,
+                title: title,
+                desc: desc.slice(0, 200) || '点击查看原文',
+                detail: desc.slice(0, 2000),
+                link: item.link || '',
+                fetchDate: Store.todayKey(),
+                tags: [source.type, 'RSS']
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.error(`RSS fetch error for ${source.name}:`, e);
+      }
+    }
+    return allItems;
+  },
+
+  async fetch() {
+    UI.toast('正在采集培训相关文章...');
+    let rssItems = [];
+    try {
+      rssItems = await this.fetchFromRSS();
+    } catch (e) {
+      console.error('Training RSS fetch failed:', e);
+    }
+
+    if (rssItems.length > 0) {
+      // 按标题去重
+      const existing = Store.get('trainingRSSItems') || [];
+      const existingTitles = new Set(existing.map(e => e.title));
+      const freshItems = rssItems.filter(item => !existingTitles.has(item.title));
+      const todayItems = (freshItems.length > 0 ? freshItems : rssItems).slice(0, 5);
+      
+      // 只保留今天的，过往不保留
+      Store.set('trainingRSSItems', todayItems);
+      Store.set('trainingLastFetch', Store.todayKey() + ' 09:00');
+      UI.toast(`已采集 ${todayItems.length} 篇培训文章`);
+      return todayItems;
+    } else {
+      UI.toast('网络不佳，使用本地文章库');
+      return [];
+    }
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   Store.init();
   UI.init();
@@ -4682,6 +4761,7 @@ function checkDailyFetch() {
   const today = Store.todayKey();
   const aiLastFetch = Store.get('aiLastFetch');
   const finLastFetch = Store.get('financeLastFetch');
+  const trainLastFetch = Store.get('trainingLastFetch');
   const now = new Date();
   if (now.getHours() >= 9) {
     setTimeout(() => {
@@ -4699,6 +4779,14 @@ function checkDailyFetch() {
           FinanceFetcher.fetch().then(() => Views.render('finance'));
         } else {
           FinanceFetcher.fetch();
+        }
+      }
+      // 培训采集
+      if (trainLastFetch !== today + ' 09:00') {
+        if (Views.current === 'training') {
+          TrainingFetcher.fetch().then(() => Views.render('training'));
+        } else {
+          TrainingFetcher.fetch();
         }
       }
     }, 3000);

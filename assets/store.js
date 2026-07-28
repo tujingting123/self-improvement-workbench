@@ -77,6 +77,8 @@ const Store = {
       // 培训知识轮换 + 收藏
       trainingKnowledgeRead: {},  // 培训知识轮换追踪
       trainingFavorites: [],      // 培训文章收藏
+      trainingRSSItems: [],       // RSS 抓取的培训文章
+      trainingLastFetch: null,    // 上次采集时间
       // 技能提升 - 文案表达
       copywritingItems: [],
       copywritingCategories: ['标题技巧', '金句收集', '故事结构', '营销文案', '演讲稿'],

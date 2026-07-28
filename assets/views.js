@@ -1880,8 +1880,35 @@ const Views = {
     const section = document.createElement('div');
     section.className = 'section-title';
     section.style.marginTop = '4px';
-    section.innerHTML = `📚 今日培训推荐 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">每日自动更新 · 点击卡片展开全文</span>`;
+    section.style.display = 'flex';
+    section.style.alignItems = 'center';
+    section.style.justifyContent = 'space-between';
+    section.innerHTML = `
+      <span>📚 今日培训推荐 <span style="font-size:11px;font-weight:400;color:var(--text-muted);">点击卡片展开全文</span></span>
+      <button class="btn btn-sm" id="fetchTrainingBtn" style="background:var(--primary);color:#fff;border:none;font-size:11px;padding:4px 10px;">📡 采集</button>
+    `;
     container.appendChild(section);
+
+    // 获取 RSS 抓取的文章，如果有则优先使用
+    const rssItems = Store.get('trainingRSSItems') || [];
+    const useRSS = rssItems.length > 0;
+    
+    // 如果用 RSS 数据，转换为统一格式
+    const displayDB = useRSS ? rssItems.map((item, idx) => ({
+      id: item.id || ('rss_' + idx),
+      cat: item.tags && item.tags[0] ? item.tags[0] : 'RSS推荐',
+      title: item.title,
+      desc: item.desc,
+      detail: item.detail || item.desc,
+      tags: item.tags || ['RSS'],
+      link: item.link
+    })) : trainingDB;
+
+    // 智能轮换：每日推荐1条，不重复
+    const result = useRSS 
+      ? { items: [displayDB[0]], cycle: 1 } 
+      : Store.getDailyKnowledge('training', trainingDB, 1);
+    let currentItem = result.items[0] || trainingDB[0];
 
     // ===== 大卡片容器 =====
     const cardWrap = document.createElement('div');
@@ -1892,7 +1919,6 @@ const Views = {
     const renderCard = (item) => {
       const isFav = Store.isTrainingFavorite(item.id);
       cardWrap.innerHTML = '';
-
       const card = document.createElement('div');
       card.className = 'finance-knowledge-card';
       card.style.cursor = 'pointer';
@@ -1939,7 +1965,15 @@ const Views = {
       skipBtn.textContent = '🔄 换一条看看';
       skipBtn.onclick = (e) => {
         e.stopPropagation();
-        const newItem = Store.skipTrainingKnowledge(item.id, trainingDB);
+        let newItem;
+        if (useRSS && displayDB.length > 1) {
+          // RSS 模式：从 displayDB 中随机换一条
+          const others = displayDB.filter(d => d.id !== item.id);
+          newItem = others[Math.floor(Math.random() * others.length)];
+        } else {
+          // 本地模式：智能轮换
+          newItem = Store.skipTrainingKnowledge(item.id, trainingDB);
+        }
         currentItem = newItem;
         renderCard(newItem);
       };
@@ -2020,6 +2054,19 @@ const Views = {
     };
 
     renderFavorites();
+
+    // 绑定采集按钮
+    setTimeout(() => {
+      const btn = document.getElementById('fetchTrainingBtn');
+      if (btn) {
+        btn.onclick = async () => {
+          btn.textContent = '采集中...';
+          btn.disabled = true;
+          await TrainingFetcher.fetch();
+          this.render('training');
+        };
+      }
+    }, 0);
   },
 
   // ===== 财经 =====
