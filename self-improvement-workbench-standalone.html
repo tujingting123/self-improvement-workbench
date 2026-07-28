@@ -2,15 +2,18 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="提升工作台">
   <meta name="theme-color" content="#ff8fa3">
   <meta name="description" content="身材管理、英语学习、阅读记录、AI学习、财经资讯、穿搭灵感、日记备忘、灵感集、技能提升">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
   <title>自我提升工作台</title>
-  <style>
-/* ===== 设计变量 - 粉色系 ===== */
+  <style>/* ===== 设计变量 - 粉色系 ===== */
 :root {
   --primary: #ff8fa3;
   --primary-light: #ffc2d1;
@@ -2004,7 +2007,47 @@ input, textarea, select {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+
+/* 可折叠的任务卡片 */
+.eng-task-collapsible {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 0;
+}
+
+.eng-task-summary {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.eng-task-arrow {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: transform 0.3s;
+  flex-shrink: 0;
+}
+
+.eng-task-arrow.collapsed {
+  transform: rotate(-90deg);
+}
+
+.eng-task-body {
+  transition: max-height 0.35s ease, opacity 0.3s, padding 0.3s;
+  max-height: 2000px;
+  opacity: 1;
+  overflow: hidden;
+  padding-top: 12px;
+}
+
+.eng-task-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  margin: 0;
 }
 
 .eng-task-title {
@@ -2475,6 +2518,98 @@ input, textarea, select {
   font-size: 13px;
   color: var(--text-sub);
   line-height: 1.5;
+}
+
+/* 造句 AI 反馈 */
+.eng-quiz-answer-text {
+  font-size: 14px;
+  color: var(--text);
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.eng-quiz-fix {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(123,198,126,0.1);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  border-left: 3px solid var(--success);
+}
+
+.eng-quiz-feedback {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(116,185,255,0.1);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.eng-quiz-examples {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(253,203,110,0.08);
+  border-radius: 8px;
+}
+
+.eng-quiz-example-item {
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px dashed var(--border);
+  line-height: 1.5;
+}
+
+.eng-quiz-example-item:last-child {
+  border-bottom: none;
+}
+
+.eng-quiz-waiting {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-sub);
+  font-size: 14px;
+}
+
+.eng-quiz-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border);
+  border-top-color: #74b9ff;
+  border-radius: 50%;
+  animation: quiz-spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes quiz-spin {
+  to { transform: rotate(360deg); }
+}
+
+.eng-quiz-apikey-hint {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.eng-quiz-apikey-btn {
+  display: inline;
+  background: none;
+  border: none;
+  color: var(--primary-dark);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
 }
 
 /* ===== 英语日历 ===== */
@@ -3340,10 +3475,9 @@ input, textarea, select {
     right: calc(50% - 280px);
   }
 }
-  </style>
+</style>
 </head>
 <body>
-
   <div id="app">
     <header class="topbar">
       <button id="menuToggle" class="icon-btn" aria-label="菜单">
@@ -3402,24 +3536,7 @@ input, textarea, select {
 
   <div id="toast" class="toast"></div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-      });
-      if (window.caches) {
-        caches.keys().then(keys => {
-          keys.forEach(key => caches.delete(key));
-        });
-      }
-    }
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-    }
-  </script>
-
-  <script>
-// ===== 数据存储层 =====
+  <script>// ===== 数据存储层 =====
 const Store = {
   KEY: 'self_improvement_data_v2',
 
@@ -4101,8 +4218,8 @@ const Store = {
     }
   }
 };
-
-// ===== 视图渲染层 =====
+</script>
+  <script>// ===== 视图渲染层 =====
 const Views = {
   current: 'fitness',
 
@@ -6725,9 +6842,8 @@ const Views = {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 };
-
-
-// ===== UI交互层 =====
+</script>
+  <script>// ===== UI交互层 =====
 const UI = {
   init() {
     document.getElementById('menuToggle').onclick = () => this.toggleSidebar(true);
